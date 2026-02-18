@@ -1,68 +1,140 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* ── Custom Tokens (Light) ── */
+    --bg: 38 43% 93%; /* #f5f0e8 */
+    --bg-2: 40 35% 89%; /* #ede7d9 */
+    --bg-3: 40 31% 84%; /* #e4dccb */
+    --gold: 38 55% 35%; /* #8b6c28 */
+    --gold-2: 38 55% 35%;
+    --teal: 180 59% 30%; /* #1f7a7a */
+    --green: 157 59% 30%; /* #1f7a5a */
+    --red: 0 60% 47%; /* #c03030 */
+    --text: 35 53% 7%; /* #1a1208 */
+    --text-muted: 35 53% 7%; /* used with opacity below */
+    --border-gold: 38 55% 35%; /* gold border (use with opacity) */
+    --border-subtle: 0 0% 0%; /* subtle border (use with opacity) */
+
+    /* ── Shadcn Mapped Tokens (Light) ── */
+    --background: 38 43% 93%;
+    --foreground: 35 53% 7%;
+    --card: 40 35% 89%;
+    --card-foreground: 35 53% 7%;
+    --popover: 40 35% 89%;
+    --popover-foreground: 35 53% 7%;
+    --primary: 38 55% 35%;
+    --primary-foreground: 38 43% 93%;
+    --secondary: 40 31% 84%;
+    --secondary-foreground: 35 53% 7%;
+    --muted: 40 31% 84%;
+    --muted-foreground: 35 30% 40%;
+    --accent: 180 59% 30%;
+    --accent-foreground: 38 43% 93%;
+    --destructive: 0 60% 47%;
+    --destructive-foreground: 38 43% 93%;
+    --border: 38 35% 78%;
+    --input: 40 31% 84%;
+    --ring: 38 55% 35%;
+    --radius: 0.5rem;
+    --chart-1: 38 55% 35%;
+    --chart-2: 180 59% 30%;
+    --chart-3: 157 59% 30%;
+    --chart-4: 0 60% 47%;
+    --chart-5: 40 35% 60%;
+    --radial-accent-1: rgba(201, 168, 76, 0.06);
+    --radial-accent-2: rgba(45, 138, 138, 0.05);
+    --grid-line: rgba(139, 108, 40, 0.04);
+    --radial-accent-1: rgba(201, 168, 76, 0.06);
+    --radial-accent-2: rgba(45, 138, 138, 0.05);
+    --grid-line: rgba(139, 108, 40, 0.04);
   }
-  a:hover {
-    color: #747bff;
+
+  .dark {
+    /* ── Custom Tokens (Dark) ── */
+    --bg: 220 43% 5%; /* #080c14 */
+    --bg-2: 220 39% 9%; /* #0e1520 */
+    --bg-3: 220 39% 13%; /* #141d2e */
+    --gold: 43 53% 54%; /* #c9a84c */
+    --gold-2: 43 73% 66%; /* #e8c96b */
+    --teal: 180 52% 49%; /* #3dbdbd */
+    --green: 157 52% 49%; /* #3dbd8a */
+    --red: 0 68% 60%; /* #e05252 */
+    --text: 38 57% 89%; /* #f0e8d8 */
+    --text-muted: 38 57% 89%; /* used with opacity */
+    --border-gold: 43 53% 54%; /* gold border (use with opacity) */
+    --border-subtle: 0 0% 100%; /* subtle border (use with opacity) */
+
+    /* ── Shadcn Mapped Tokens (Dark) ── */
+    --background: 220 43% 5%;
+    --foreground: 38 57% 89%;
+    --card: 220 39% 9%;
+    --card-foreground: 38 57% 89%;
+    --popover: 220 39% 9%;
+    --popover-foreground: 38 57% 89%;
+    --primary: 43 53% 54%;
+    --primary-foreground: 220 43% 5%;
+    --secondary: 220 39% 13%;
+    --secondary-foreground: 38 57% 89%;
+    --muted: 220 39% 13%;
+    --muted-foreground: 38 30% 60%;
+    --accent: 180 52% 49%;
+    --accent-foreground: 220 43% 5%;
+    --destructive: 0 68% 60%;
+    --destructive-foreground: 38 57% 89%;
+    --border: 220 30% 20%;
+    --input: 220 39% 13%;
+    --ring: 43 53% 54%;
+    --chart-1: 43 53% 54%;
+    --chart-2: 180 52% 49%;
+    --chart-3: 157 52% 49%;
+    --chart-4: 0 68% 60%;
+    --chart-5: 43 73% 66%;
+    --radial-accent-1: rgba(201, 168, 76, 0.04);
+    --radial-accent-2: rgba(45, 138, 138, 0.04);
+    --grid-line: rgba(201, 168, 76, 0.025);
+    --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+    --shadow-gold: 0 0 24px rgba(201, 168, 76, 0.15);
+    --shadow-active:
+      0 0 0 1px rgba(201, 168, 76, 0.2) inset,
+      0 8px 32px -8px rgba(201, 168, 76, 0.12);
   }
-  button {
-    background-color: #f9f9f9;
+  .dashboard-bg {
+    background-image:
+      radial-gradient(
+        circle at 20% 50%,
+        var(--radial-accent-1) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        var(--radial-accent-2) 0%,
+        transparent 50%
+      ),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 28px,
+        var(--grid-line) 28px,
+        var(--grid-line) 29px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 28px,
+        var(--grid-line) 28px,
+        var(--grid-line) 29px
+      );
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
