@@ -50,6 +50,7 @@
     --radial-accent-1: rgba(201, 168, 76, 0.06);
     --radial-accent-2: rgba(45, 138, 138, 0.05);
     --grid-line: rgba(139, 108, 40, 0.04);
+    
   }
 
   .dark {
@@ -131,10 +132,26 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
+  /* src/index.css */
+  @layer base {
+    :root {
+      --bg: 8 12 20;
+      --surface: 14 21 32;
+      /* ...etc as HSL or direct values */
+    }
+
+    .dark {
+      --bg: #080c14;
+      --bg-2: #0e1520;
+      --text: #f0e8d8;
+      /* dark tokens */
+    }
+
+    .light {
+      --bg: #f5f0e8;
+      --bg-2: #ede7d9;
+      --text: #1a1208;
+      /* light tokens */
+    }
   }
 }

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { AppHeader } from "./components/layout/AppHeader";
 
-import "./App.css";
-
-function App() {
-  return {};
+export default function App() {
+  return (
+    <div>
+      <AppHeader userInitials="AK" />
+    </div>
+  );
 }
-
-export default App;
