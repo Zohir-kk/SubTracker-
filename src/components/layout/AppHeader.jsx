@@ -18,7 +18,7 @@ function Logo() {
           fontFamily="Georgia, serif"
           fontSize="11"
           fontWeight="700"
-          fill="var(--bg)"
+          fill="#080c14"
         >
           S
         </text>
@@ -130,7 +130,7 @@ function ThemeToggle() {
             width: "18px",
             height: "18px",
             borderRadius: "50%",
-            backgroundColor: isDark ? "#c9a84c" : "#8b6c28",
+            backgroundColor: isDark ? "#2dd4bf" : "#0d9488",
             position: "absolute",
             top: "2px",
             left: "2px",
@@ -162,7 +162,7 @@ function UserAvatar({ initials = "AK" }) {
         minWidth: "34px",
         borderRadius: "50%",
         backgroundColor: "var(--gold)",
-        color: "var(--bg)",
+        color: "#080c14",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -171,7 +171,6 @@ function UserAvatar({ initials = "AK" }) {
         fontWeight: 500,
         cursor: "pointer",
         userSelect: "none",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
       }}
     >
       {initials}
