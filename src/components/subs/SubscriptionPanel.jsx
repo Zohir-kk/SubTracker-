@@ -81,7 +81,7 @@ function StatusBadge({ status }) {
     <div
       style={{
         ...styles[status],
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'IBM Plex Mono', monospace",
         fontSize: "8px",
         letterSpacing: "1px",
         textTransform: "uppercase",
@@ -213,7 +213,7 @@ function SubscriptionCard({ sub }) {
       {/* ── Name + category label ── */}
       <div
         style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'IBM Plex Mono', monospace",
           fontSize: "11px",
           color: "var(--text)",
           marginBottom: "2px",
@@ -223,7 +223,7 @@ function SubscriptionCard({ sub }) {
       </div>
       <div
         style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'IBM Plex Mono', monospace",
           fontSize: "8px",
           letterSpacing: "1.5px",
           textTransform: "uppercase",
@@ -238,7 +238,7 @@ function SubscriptionCard({ sub }) {
       <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
         <span
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "22px",
             fontWeight: 700,
             color: "var(--text)",
@@ -248,7 +248,7 @@ function SubscriptionCard({ sub }) {
         </span>
         <span
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "9px",
             color: "var(--text-faint)",
           }}
@@ -264,7 +264,7 @@ function SubscriptionCard({ sub }) {
           alignItems: "center",
           gap: "6px",
           marginTop: "6px",
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "'IBM Plex Mono', monospace",
           fontSize: "9px",
           color: "var(--text-faint)",
         }}
@@ -322,7 +322,7 @@ function CategoryTabs({ activeTab, onChange }) {
             key={tab.value}
             onClick={() => onChange(tab.value)} // tell parent which tab was clicked
             style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'IBM Plex Mono', monospace",
               fontSize: "9px",
               letterSpacing: "1px",
               textTransform: "uppercase",
@@ -404,7 +404,7 @@ export function SubscriptionPanel() {
         />
         <div
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "16px",
             fontWeight: 600,
             color: "var(--text)",
@@ -416,7 +416,7 @@ export function SubscriptionPanel() {
         <div
           style={{
             marginLeft: "auto",
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "9px",
             letterSpacing: "1.5px",
             textTransform: "uppercase",
@@ -450,7 +450,7 @@ export function SubscriptionPanel() {
           style={{
             textAlign: "center",
             padding: "40px 0",
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "10px",
             letterSpacing: "1.5px",
             textTransform: "uppercase",

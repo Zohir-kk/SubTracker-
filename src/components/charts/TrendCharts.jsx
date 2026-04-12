@@ -51,7 +51,7 @@ function CustomTooltip({ active, payload, label }) {
         border: "1px solid var(--border)",
         borderRadius: "8px",
         padding: "10px 14px",
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'IBM Plex Mono', monospace",
       }}
     >
       {/* Month label at the top of the tooltip */}
@@ -128,7 +128,7 @@ export function TrendChart() {
         />
         <div
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "16px",
             fontWeight: 600,
             color: "var(--text)",
@@ -139,7 +139,7 @@ export function TrendChart() {
         <div
           style={{
             marginLeft: "auto",
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "9px",
             letterSpacing: "1.5px",
             textTransform: "uppercase",
@@ -179,7 +179,7 @@ export function TrendChart() {
             dataKey="month"
             tick={{
               fill: tickColor,
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 9,
             }}
             axisLine={false} // hide the axis line itself
@@ -191,7 +191,7 @@ export function TrendChart() {
             tickFormatter={formatK}
             tick={{
               fill: tickColor,
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 9,
             }}
             axisLine={false}

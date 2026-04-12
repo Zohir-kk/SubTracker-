@@ -27,7 +27,7 @@ function Logo() {
       <div>
         <div
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "20px",
             fontWeight: 700,
             color: "var(--text)",
@@ -39,7 +39,7 @@ function Logo() {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "8px",
             color: "var(--text-faint)",
             letterSpacing: "2px",
@@ -66,7 +66,7 @@ function MonthBadge() {
   return (
     <div
       style={{
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'IBM Plex Mono', monospace",
         fontSize: "10px",
         letterSpacing: "1.5px",
         textTransform: "uppercase",
@@ -166,7 +166,7 @@ function UserAvatar({ initials = "AK" }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'IBM Plex Mono', monospace",
         fontSize: "11px",
         fontWeight: 500,
         cursor: "pointer",

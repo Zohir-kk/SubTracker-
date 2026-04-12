@@ -73,7 +73,7 @@ function UpcomingItem({ sub, days }) {
       <div style={{ textAlign: "center", minWidth: "36px", flexShrink: 0 }}>
         <div
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "22px",
             fontWeight: 700,
             // Red if renewing soon, gold/teal accent otherwise
@@ -85,7 +85,7 @@ function UpcomingItem({ sub, days }) {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "8px",
             letterSpacing: "1px",
             textTransform: "uppercase",
@@ -132,7 +132,7 @@ function UpcomingItem({ sub, days }) {
           )}
           <div
             style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'IBM Plex Mono', monospace",
               fontSize: "11px",
               color: "var(--text)",
               // Truncate long names with ellipsis
@@ -146,7 +146,7 @@ function UpcomingItem({ sub, days }) {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "8px",
             letterSpacing: "1.5px",
             textTransform: "uppercase",
@@ -161,7 +161,7 @@ function UpcomingItem({ sub, days }) {
       <div style={{ textAlign: "right", flexShrink: 0 }}>
         <span
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "16px",
             fontWeight: 600,
             color: "var(--text)",
@@ -171,7 +171,7 @@ function UpcomingItem({ sub, days }) {
         </span>
         <span
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "8px",
             color: "var(--text-faint)",
             marginLeft: "3px",
@@ -223,7 +223,7 @@ export function UpcomingRenewals() {
         />
         <div
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "16px",
             fontWeight: 600,
             color: "var(--text)",
@@ -235,7 +235,7 @@ export function UpcomingRenewals() {
         <div
           style={{
             marginLeft: "auto",
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "9px",
             letterSpacing: "1.5px",
             textTransform: "uppercase",
