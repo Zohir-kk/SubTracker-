@@ -1,8 +1,11 @@
 // src/components/layout/AppHeader.jsx
 
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { useStore } from "../../store/useStore.jsx";
+import { ProfileModal } from "../settings/ProfileModal.jsx";
+import { useWideLayout } from "../../hooks/useSubscriptions.js";
 
 // ── Logo ──────────────────────────────
 function Logo() {
@@ -18,7 +21,7 @@ function Logo() {
           fontFamily="Georgia, serif"
           fontSize="11"
           fontWeight="700"
-          fill="var(--bg)"
+          fill="#080c14"
         >
           S
         </text>
@@ -27,7 +30,7 @@ function Logo() {
       <div>
         <div
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: "20px",
             fontWeight: 700,
             color: "var(--text)",
@@ -39,7 +42,7 @@ function Logo() {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "8px",
             color: "var(--text-faint)",
             letterSpacing: "2px",
@@ -66,7 +69,7 @@ function MonthBadge() {
   return (
     <div
       style={{
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'IBM Plex Mono', monospace",
         fontSize: "10px",
         letterSpacing: "1.5px",
         textTransform: "uppercase",
@@ -130,7 +133,7 @@ function ThemeToggle() {
             width: "18px",
             height: "18px",
             borderRadius: "50%",
-            backgroundColor: isDark ? "#c9a84c" : "#8b6c28",
+            backgroundColor: isDark ? "#2dd4bf" : "#0d9488",
             position: "absolute",
             top: "2px",
             left: "2px",
@@ -153,25 +156,26 @@ function ThemeToggle() {
 }
 
 // ── User Avatar ────────────────────────
-function UserAvatar({ initials = "AK" }) {
+function UserAvatar({ initials = "AK", onClick }) {
   return (
     <div
+      onClick={onClick}
+      title="Modifier le profil"
       style={{
         width: "34px",
         height: "34px",
         minWidth: "34px",
         borderRadius: "50%",
         backgroundColor: "var(--gold)",
-        color: "var(--bg)",
+        color: "#080c14",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'IBM Plex Mono', monospace",
         fontSize: "11px",
         fontWeight: 500,
         cursor: "pointer",
         userSelect: "none",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
       }}
     >
       {initials}
@@ -180,31 +184,62 @@ function UserAvatar({ initials = "AK" }) {
 }
 
 // ── AppHeader ──────────────────────────
-export function AppHeader({ userInitials = "AK" }) {
-  return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        height: "68px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 24px",
-        backgroundColor: "var(--bg)",
-        borderBottom: "1px solid var(--border2)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}
-    >
-      <Logo />
+export function AppHeader({ onMenuClick }) {
+  const { profile } = useStore();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const isDesktop = useWideLayout(768);
 
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        <MonthBadge />
-        <ThemeToggle />
-        <UserAvatar initials={userInitials} />
-      </div>
-    </header>
+  return (
+    <>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          height: "68px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
+          backgroundColor: "var(--bg)",
+          borderBottom: "1px solid var(--border2)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          gap: "12px",
+        }}
+      >
+        {/* Hamburger — only shown on mobile */}
+        {!isDesktop && (
+          <button
+            onClick={onMenuClick}
+            style={{
+              background: "transparent",
+              border: "1px solid var(--border-2)",
+              borderRadius: "8px",
+              padding: "6px",
+              cursor: "pointer",
+              color: "var(--text-faint)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Menu size={18} />
+          </button>
+        )}
+
+        <Logo />
+
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "auto" }}>
+          {/* Month badge hidden on mobile — saves space */}
+          {isDesktop && <MonthBadge />}
+          <ThemeToggle />
+          <UserAvatar initials={profile.initials} onClick={() => setProfileOpen(true)} />
+        </div>
+      </header>
+
+      <ProfileModal isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
+    </>
   );
 }
