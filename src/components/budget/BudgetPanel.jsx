@@ -1,25 +1,7 @@
 // src/components/budget/BudgetPanel.jsx
 import { useEffect, useState } from "react";
-import { subscriptions, budgetLimits } from "../../data/subscriptions.js";
-import { formatDZD, useWideLayout } from "../../hooks/useSubscriptions.js";
-// BUG FIXED: removed local formatDZD, replaced local isWide useEffect with useWideLayout hook
-
-const CATEGORIES = [
-  { key: "internet", label: "Internet", icon: "📡", color: "var(--teal)" },
-  { key: "streaming", label: "Streaming", icon: "🎬", color: "var(--orange)" },
-  { key: "vod", label: "VOD Arabe", icon: "🎭", color: "var(--gold)" },
-  { key: "transport", label: "Transport", icon: "🚇", color: "var(--red)" },
-];
-
-function computeSpendPerCategory() {
-  const totals = {};
-  subscriptions
-    .filter((s) => s.status === "active" || s.status === "trial")
-    .forEach((s) => {
-      totals[s.category] = (totals[s.category] || 0) + s.amount;
-    });
-  return totals;
-}
+import { subscriptions, budgetLimits, CATEGORIES } from "../../data/subscriptions.js";
+import { formatDZD, useWideLayout, computeSpendPerCategory } from "../../hooks/useSubscriptions.js";
 
 function BudgetBar({ category, used, limit, animate }) {
   const percent = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
@@ -158,7 +140,7 @@ function StatCard({ label, value, sub, color }) {
 }
 
 export function BudgetPanel() {
-  const spent = computeSpendPerCategory();
+  const spent = computeSpendPerCategory(subscriptions);
   const totalSpent = Object.values(spent).reduce((a, b) => a + b, 0);
   const totalBudget = Object.values(budgetLimits).reduce((a, b) => a + b, 0);
   const savedAmount = subscriptions

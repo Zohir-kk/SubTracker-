@@ -1,18 +1,19 @@
 // src/App.jsx
+// ─────────────────────────────────────────────────────────────
+// Root component. Now just a shell — layout + providers.
+// All dashboard content lives in src/pages/Dashboard.jsx.
+//
+// To add new pages later:
+//   import { Budget } from "./pages/Budget"
+//   import { Settings } from "./pages/Settings"
+//   and render them based on active route or sidebar state
+// ─────────────────────────────────────────────────────────────
+
 import { AppHeader } from "./components/layout/AppHeader";
-import { KPIRow } from "./components/kpi/KPIRow";
-import { SubscriptionPanel } from "./components/subs/SubscriptionPanel";
-import { TrendChart } from "./components/charts/TrendCharts";
-import { CategoryBreakdown } from "./components/charts/CategoryBreakdown";
-import { UpcomingRenewals } from "./components/upcoming/UpcomingRenewals";
-import { BudgetPanel } from "./components/budget/BudgetPanel";
 import { AppSidebar } from "./components/layout/AppSidebar";
-import { useWideLayout } from "./hooks/useSubscriptions";
+import { Dashboard } from "./pages/dashboard";
 
 export default function App() {
-  //hook must be inside the component function, not outside
-  const isWide = useWideLayout(768);
-
   return (
     <div
       style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}
@@ -20,7 +21,7 @@ export default function App() {
       {/* Persistent left navigation */}
       <AppSidebar />
 
-      {/* Main content — flex:1 fills remaining space, minWidth:0 fixes Recharts overflow */}
+      {/* Main content area */}
       <div
         style={{
           flex: 1,
@@ -29,38 +30,11 @@ export default function App() {
           minWidth: 0,
         }}
       >
+        {/* Sticky top bar */}
         <AppHeader userInitials="ZK" />
 
-        <div style={{ padding: "16px", overflowY: "auto" }}>
-          <section id="dashboard">
-            <KPIRow />
-          </section>
-
-          <section id="abonnements">
-            <SubscriptionPanel />
-          </section>
-
-          {/* Category Breakdown + Upcoming Renewals side by side */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isWide ? "1fr 1fr" : "1fr",
-              gap: "16px",
-              marginBottom: "16px",
-            }}
-          >
-            <CategoryBreakdown />
-            <UpcomingRenewals />
-          </div>
-
-          <section id="tendances">
-            <TrendChart />
-          </section>
-
-          <section id="budget">
-            <BudgetPanel />
-          </section>
-        </div>
+        {/* Active page — swap Dashboard for other pages here */}
+        <Dashboard />
       </div>
     </div>
   );

@@ -11,23 +11,7 @@
 
 import { useState, useEffect } from "react";
 import { subscriptions } from "../../data/subscriptions";
-
-// ── HELPER ────────────────────────────────────────────────────
-
-// Calculates how many days until the next renewalDay.
-// If the day has already passed this month, it rolls to next month.
-function daysUntil(day) {
-  const today = new Date();
-  const target = new Date(today.getFullYear(), today.getMonth(), day);
-  if (target < today) target.setMonth(target.getMonth() + 1);
-  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-}
-
-// Formats a number into Algerian DZD display format.
-// e.g. 3200 → "3 200"
-function formatDZD(amount) {
-  return new Intl.NumberFormat("fr-DZ").format(amount);
-}
+import { formatDZD, daysUntil } from "../../hooks/useSubscriptions.js";
 
 // ── CATEGORY COLOR MAP ────────────────────────────────────────
 // Maps each subscription category to its accent color.

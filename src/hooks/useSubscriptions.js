@@ -1,30 +1,28 @@
 // src/hooks/useSubscriptions.js
 // ─────────────────────────────────────────────────────────────
-// Shared hooks and utilities used across the dashboard.
-// Import what you need in each component.
+// React hooks for shared state and data logic.
+// Pure utility functions have been moved to src/lib/utils.js
+//
+// Rule: only put things here that need useState or useEffect.
+// Everything else goes in lib/utils.js
 // ─────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
 import { subscriptions } from "../data/subscriptions.js";
+import { daysUntil } from "../lib/utils.js";
 
-// ── FORMAT DZD ────────────────────────────────────────────────
-// Formats a number as Algerian DZD — e.g. 3200 → "3 200"
-export function formatDZD(amount) {
-  return new Intl.NumberFormat("fr-DZ").format(amount);
-}
-
-// ── DAYS UNTIL ────────────────────────────────────────────────
-// Returns days until the next occurrence of a given day-of-month.
-// If the day already passed this month, rolls to next month.
-export function daysUntil(day) {
-  const today = new Date();
-  const target = new Date(today.getFullYear(), today.getMonth(), day);
-  if (target < today) target.setMonth(target.getMonth() + 1);
-  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-}
+// Re-export utilities from lib/utils.js so components that
+// currently import from hooks don't need to change their imports
+export {
+  formatDZD,
+  daysUntil,
+  renewalMonth,
+  computeSpendPerCategory,
+  computeBreakdown,
+} from "../lib/utils.js";
 
 // ── USE MEDIA GRID ────────────────────────────────────────────
-// Returns a column count that updates on window resize.
+// Returns a responsive column count that updates on window resize.
 // Usage: const cols = useMediaGrid(4)
 // Breakpoints: <480px=1col, <1024px=2cols, else=defaultCols
 export function useMediaGrid(defaultCols = 3) {
@@ -45,10 +43,32 @@ export function useMediaGrid(defaultCols = 3) {
   return cols;
 }
 
+// ── USE WIDE LAYOUT ───────────────────────────────────────────
+// Returns true if screen is wider than the given breakpoint.
+// Usage: const isWide = useWideLayout(768)
+export function useWideLayout(breakpoint = 768) {
+  const [isWide, setIsWide] = useState(
+    typeof window !== "undefined" ? window.innerWidth >= breakpoint : true,
+  );
+
+  useEffect(() => {
+    function update() {
+      setIsWide(window.innerWidth >= breakpoint);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [breakpoint]);
+
+  return isWide;
+}
+
 // ── USE KPI ───────────────────────────────────────────────────
-// Computes all 4 KPI values from subscriptions data.
+// Computes all 4 dashboard KPI values from subscriptions data.
 // Usage: const { total, activeCount, savings, next } = useKPI()
 export function useKPI() {
+  // Import daysUntil locally since it's needed for the calculation
+
   const active = subscriptions.filter((s) => s.status === "active");
   const paused = subscriptions.filter((s) => s.status === "paused");
   const billable = subscriptions.filter(
@@ -67,31 +87,3 @@ export function useKPI() {
   return { total, activeCount, savings, next };
 }
 
-// ── USE FILTERED SUBSCRIPTIONS ────────────────────────────────
-// Filters subscriptions by category tab.
-// "all" returns everything unfiltered.
-// Usage: const filtered = useFilteredSubscriptions(activeTab)
-export function useFilteredSubscriptions(activeTab = "all") {
-  return activeTab === "all"
-    ? subscriptions
-    : subscriptions.filter((s) => s.category === activeTab);
-}
-
-// ── USE WIDE LAYOUT ───────────────────────────────────────────
-// Returns true if screen is wider than a given breakpoint.
-// Used by BudgetPanel for its side-by-side layout.
-// Usage: const isWide = useWideLayout()
-export function useWideLayout(breakpoint = 768) {
-  const [isWide, setIsWide] = useState(window.innerWidth >= breakpoint);
-
-  useEffect(() => {
-    function update() {
-      setIsWide(window.innerWidth >= breakpoint);
-    }
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [breakpoint]);
-
-  return isWide;
-}

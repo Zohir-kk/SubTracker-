@@ -1,33 +1,7 @@
 // src/components/charts/CategoryBreakdown.jsx
 import { useEffect, useState } from "react";
-import { subscriptions } from "../../data/subscriptions.js";
-import { formatDZD } from "../../hooks/useSubscriptions.js";
-// BUG FIXED: removed local formatDZD, now imported from hooks
-
-const CATEGORIES = [
-  { key: "internet", label: "Internet", icon: "📡", color: "var(--teal)" },
-  { key: "streaming", label: "Streaming", icon: "🎬", color: "var(--orange)" },
-  { key: "vod", label: "VOD Arabe", icon: "🎭", color: "var(--gold)" },
-  { key: "transport", label: "Transport", icon: "🚇", color: "var(--red)" },
-];
-
-function computeBreakdown() {
-  const totals = {};
-  subscriptions
-    .filter((s) => s.status === "active" || s.status === "trial")
-    .forEach((s) => {
-      totals[s.category] = (totals[s.category] || 0) + s.amount;
-    });
-  const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
-  return CATEGORIES.map((cat) => ({
-    ...cat,
-    amount: totals[cat.key] || 0,
-    percent:
-      grandTotal > 0
-        ? Math.round(((totals[cat.key] || 0) / grandTotal) * 100)
-        : 0,
-  })).sort((a, b) => b.amount - a.amount);
-}
+import { subscriptions, CATEGORIES } from "../../data/subscriptions.js";
+import { formatDZD, computeBreakdown } from "../../hooks/useSubscriptions.js";
 
 function BreakdownRow({ item, animate }) {
   return (
@@ -119,7 +93,7 @@ function BreakdownRow({ item, animate }) {
 }
 
 export function CategoryBreakdown() {
-  const breakdown = computeBreakdown();
+  const breakdown = computeBreakdown(subscriptions, CATEGORIES);
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setAnimate(true), 150);
@@ -134,7 +108,6 @@ export function CategoryBreakdown() {
         border: "1px solid var(--border-2)",
         borderRadius: "14px",
         padding: "18px",
-        marginBottom: "16px",
       }}
     >
       <div

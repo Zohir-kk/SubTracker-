@@ -98,3 +98,11 @@ export const budgetLimits = {
   transport: 2000,
   vod: 3000,
 };
+
+// Shared category definitions — used by BudgetPanel, CategoryBreakdown, etc.
+export const CATEGORIES = [
+  { key: "internet", label: "Internet", icon: "📡", color: "var(--teal)" },
+  { key: "streaming", label: "Streaming", icon: "🎬", color: "var(--orange)" },
+  { key: "vod", label: "VOD Arabe", icon: "🎭", color: "var(--gold)" },
+  { key: "transport", label: "Transport", icon: "🚇", color: "var(--red)" },
+];

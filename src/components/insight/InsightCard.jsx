@@ -1,7 +1,7 @@
-// src/components/shared/InsightCard.jsx
+// src/components/insight/InsightCard.jsx
 import { subscriptions } from "../../data/subscriptions.js";
 import { formatDZD } from "../../hooks/useSubscriptions.js";
-// BUG FIXED: removed local formatDZD, now imported from hooks
+
 
 function computeInsight() {
   const vodSubs = subscriptions.filter(
@@ -58,7 +58,7 @@ export function InsightCard() {
       <div style={{ fontSize: "16px", flexShrink: 0, marginTop: "1px" }}>
         💡
       </div>
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
@@ -76,6 +76,7 @@ export function InsightCard() {
             fontSize: "9px",
             color: "var(--text-muted)",
             lineHeight: 1.7,
+            overflowWrap: "break-word",
           }}
         >
           {insight.before}

@@ -12,30 +12,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { subscriptions } from "../../data/subscriptions";
-
-// ── HELPERS ───────────────────────────────────────────────────
-
-// Returns days until a given day-of-month
-function daysUntil(day) {
-  const today = new Date();
-  const target = new Date(today.getFullYear(), today.getMonth(), day);
-  if (target < today) target.setMonth(target.getMonth() + 1);
-  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-}
-
-// Formats number as DZD — e.g. 1990 → "1 990"
-function formatDZD(amount) {
-  return new Intl.NumberFormat("fr-DZ").format(amount);
-}
-
-// Returns the month name for a given renewalDay.
-// If the day has passed this month, it returns next month's name.
-function renewalMonth(day) {
-  const today = new Date();
-  const target = new Date(today.getFullYear(), today.getMonth(), day);
-  if (target < today) target.setMonth(target.getMonth() + 1);
-  return target.toLocaleDateString("fr-DZ", { month: "short" });
-}
+import { formatDZD, daysUntil, renewalMonth } from "../../hooks/useSubscriptions.js";
 
 // Category colors — matches the rest of the dashboard
 const CATEGORY_COLORS = {
@@ -73,7 +50,7 @@ function UpcomingItem({ sub, days }) {
       <div style={{ textAlign: "center", minWidth: "36px", flexShrink: 0 }}>
         <div
           style={{
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "'Cormorant Garamond', serif",
             fontSize: "22px",
             fontWeight: 700,
             // Red if renewing soon, gold/teal accent otherwise
@@ -85,7 +62,7 @@ function UpcomingItem({ sub, days }) {
         </div>
         <div
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: "8px",
             letterSpacing: "1px",
             textTransform: "uppercase",
@@ -132,7 +109,7 @@ function UpcomingItem({ sub, days }) {
           )}
           <div
             style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'DM Mono', monospace",
               fontSize: "11px",
               color: "var(--text)",
               // Truncate long names with ellipsis
@@ -146,7 +123,7 @@ function UpcomingItem({ sub, days }) {
         </div>
         <div
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: "8px",
             letterSpacing: "1.5px",
             textTransform: "uppercase",
@@ -161,7 +138,7 @@ function UpcomingItem({ sub, days }) {
       <div style={{ textAlign: "right", flexShrink: 0 }}>
         <span
           style={{
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "'Cormorant Garamond', serif",
             fontSize: "16px",
             fontWeight: 600,
             color: "var(--text)",
@@ -171,7 +148,7 @@ function UpcomingItem({ sub, days }) {
         </span>
         <span
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: "8px",
             color: "var(--text-faint)",
             marginLeft: "3px",
@@ -200,7 +177,9 @@ export function UpcomingRenewals() {
         border: "1px solid var(--border-2)",
         borderRadius: "14px",
         padding: "18px",
-        marginBottom: "16px",
+        marginBottom: "0",
+        height: "100%",
+        boxSizing: "border-box",
       }}
     >
       {/* ── Panel header ── */}
@@ -223,7 +202,7 @@ export function UpcomingRenewals() {
         />
         <div
           style={{
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "'Cormorant Garamond', serif",
             fontSize: "16px",
             fontWeight: 600,
             color: "var(--text)",
@@ -235,7 +214,7 @@ export function UpcomingRenewals() {
         <div
           style={{
             marginLeft: "auto",
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: "9px",
             letterSpacing: "1.5px",
             textTransform: "uppercase",
