@@ -1,20 +1,98 @@
-# React + Vite
+# SubDz — Subscription Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personal subscription management dashboard built for Algerian users. Track monthly subscriptions, manage budgets per category, and get renewal alerts — all stored locally in the browser.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech Stack
 
-## React Compiler
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 |
+| Build tool | Vite (rolldown-vite 7) |
+| Styling | Inline CSS with CSS custom properties — no Tailwind classes used in components |
+| Charts | Recharts |
+| Icons | Lucide React |
+| Theme | next-themes (dark / light) |
+| UI primitives | Radix UI (avatar, dialog, dropdown, select, switch, tabs, tooltip) |
+| State / persistence | React Context + localStorage (no external state library) |
+| Currency | DZD (Algerian Dinar) |
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+---
 
-Note: This will impact Vite dev & build performances.
+## Project Structure
 
-## Expanding the ESLint configuration
+```
+src/
+├── App.jsx                        # Root — StoreProvider + layout shell
+├── pages/
+│   └── dashboard.jsx              # Main dashboard page
+├── store/
+│   └── useStore.jsx               # Global state (subscriptions, budget, categories, profile)
+├── hooks/
+│   └── useSubscriptions.js        # Shared hooks: useKPI, useMediaGrid, useWideLayout
+├── lib/
+│   └── utils.js                   # Pure utilities: formatDZD, daysUntil, computeBreakdown, etc.
+├── data/
+│   └── subscriptions.js           # Seed/mock data loaded on first launch
+└── components/
+    ├── layout/
+    │   ├── AppHeader.jsx           # Sticky top bar — theme toggle, avatar, hamburger on mobile
+    │   └── AppSidebar.jsx          # Collapsible left nav — overlay on mobile
+    ├── kpi/
+    │   └── KPIRow.jsx              # 4 summary cards (total, active count, savings, next renewal)
+    ├── subs/
+    │   └── SubscriptionPanel.jsx   # Subscription grid with category filter tabs
+    ├── subscription/
+    │   └── SubscriptionModal.jsx   # Add / edit / delete modal + inline new-category form
+    ├── upcoming/
+    │   └── UpcomingRenewals.jsx    # Sorted list of upcoming renewals
+    ├── budget/
+    │   └── BudgetPanel.jsx         # Per-category budget bars with inline editing
+    ├── charts/
+    │   ├── CategoryBreakdown.jsx   # Spending breakdown by category
+    │   └── TrendCharts.jsx         # Monthly spending trend (Recharts)
+    ├── insight/
+    │   └── InsightCard.jsx         # Single AI-style insight about spending
+    └── settings/
+        └── ProfileModal.jsx        # Edit display name + initials (triggered from avatar)
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
 
-# SubTracker-
+## State & Persistence
+
+All data lives in `localStorage` via `useStore.jsx`. No backend, no auth.
+
+| Key | Contents |
+|-----|----------|
+| `subdz_subscriptions` | Array of subscription objects |
+| `subdz_budget` | Map of `{ [categoryKey]: limitDZD }` |
+| `subdz_categories` | Array of category objects `{ key, label, icon, color }` |
+| `subdz_profile` | `{ name, initials }` |
+
+On first launch the store seeds from `src/data/subscriptions.js` so the dashboard is not empty.
+
+---
+
+## Key Conventions
+
+- **All amounts in DZD** — formatted via `formatDZD()` from `lib/utils.js`
+- **Inline CSS throughout** — no Tailwind classes in components, CSS custom properties for theming (`var(--gold)`, `var(--teal)`, `var(--bg-2)`, etc.)
+- **Modals use `createPortal`** — rendered at `document.body` to avoid clipping issues
+- **Responsive breakpoints**: 480px (1 col), 768px (2 col / mobile sidebar), 1024px (full desktop)
+- **Categories are dynamic** — stored in the store, not hardcoded; all components derive color/label/icon via `categories.find()`
+
+---
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+```bash
+npm run build    # production build
+npm run preview  # preview production build locally
+```
