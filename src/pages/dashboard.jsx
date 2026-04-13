@@ -25,7 +25,7 @@ export function Dashboard() {
   const isWide = useWideLayout(768);
 
   return (
-    <div style={{ padding: "16px", overflowY: "auto" }}>
+    <div style={{ padding: isWide ? "16px" : "10px", overflowY: "auto" }}>
       {/* ── KPI summary cards ── */}
       <section id="dashboard">
         <KPIRow />

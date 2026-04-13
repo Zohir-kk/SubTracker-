@@ -9,33 +9,34 @@
 //   and render them based on active route or sidebar state
 // ─────────────────────────────────────────────────────────────
 
+import { useState } from "react";
+import { StoreProvider } from "./store/useStore";
 import { AppHeader } from "./components/layout/AppHeader";
 import { AppSidebar } from "./components/layout/AppSidebar";
 import { Dashboard } from "./pages/dashboard";
 
 export default function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div
-      style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}
-    >
-      {/* Persistent left navigation */}
-      <AppSidebar />
-
-      {/* Main content area */}
+    <StoreProvider>
       <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          minWidth: 0,
-        }}
+        style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}
       >
-        {/* Sticky top bar */}
-        <AppHeader userInitials="ZK" />
+        <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Active page — swap Dashboard for other pages here */}
-        <Dashboard />
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
+          }}
+        >
+          <AppHeader onMenuClick={() => setSidebarOpen((v) => !v)} />
+          <Dashboard />
+        </div>
       </div>
-    </div>
+    </StoreProvider>
   );
 }

@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
-import { subscriptions } from "../data/subscriptions.js";
+import { useStore } from "../store/useStore.jsx";
 import { daysUntil } from "../lib/utils.js";
 
 // Re-export utilities from lib/utils.js so components that
@@ -67,7 +67,7 @@ export function useWideLayout(breakpoint = 768) {
 // Computes all 4 dashboard KPI values from subscriptions data.
 // Usage: const { total, activeCount, savings, next } = useKPI()
 export function useKPI() {
-  // Import daysUntil locally since it's needed for the calculation
+  const { subscriptions } = useStore();
 
   const active = subscriptions.filter((s) => s.status === "active");
   const paused = subscriptions.filter((s) => s.status === "paused");

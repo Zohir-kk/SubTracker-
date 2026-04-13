@@ -1,9 +1,9 @@
 // src/components/budget/BudgetPanel.jsx
-import { useEffect, useState } from "react";
-import { subscriptions, budgetLimits, CATEGORIES } from "../../data/subscriptions.js";
+import { useEffect, useRef, useState } from "react";
 import { formatDZD, useWideLayout, computeSpendPerCategory } from "../../hooks/useSubscriptions.js";
+import { useStore } from "../../store/useStore.jsx";
 
-function BudgetBar({ category, used, limit, animate }) {
+function BudgetBar({ category, used, limit, animate, onEditLimit }) {
   const percent = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
   const isOverspend = percent >= 90;
   const barColor = isOverspend ? "var(--red)" : category.color;
@@ -45,6 +45,9 @@ function BudgetBar({ category, used, limit, animate }) {
         </div>
         <div
           style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: "9px",
             color: isOverspend ? "var(--red)" : "var(--text-faint)",
@@ -54,6 +57,25 @@ function BudgetBar({ category, used, limit, animate }) {
           <span style={{ color: "var(--text-faint)" }}>
             / {formatDZD(limit)}
           </span>
+          <button
+            onClick={onEditLimit}
+            title="Modifier le budget"
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--text-faint)",
+              padding: "1px 3px",
+              borderRadius: "3px",
+              fontSize: "10px",
+              lineHeight: 1,
+              opacity: 0.6,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+          >
+            ✎
+          </button>
         </div>
       </div>
       <div
@@ -140,6 +162,7 @@ function StatCard({ label, value, sub, color }) {
 }
 
 export function BudgetPanel() {
+  const { subscriptions, budgetLimits, categories: CATEGORIES, setBudget } = useStore();
   const spent = computeSpendPerCategory(subscriptions);
   const totalSpent = Object.values(spent).reduce((a, b) => a + b, 0);
   const totalBudget = Object.values(budgetLimits).reduce((a, b) => a + b, 0);
@@ -155,7 +178,31 @@ export function BudgetPanel() {
     return () => clearTimeout(timer);
   }, []);
 
-  // BUG FIXED: replaced manual useEffect with useWideLayout hook
+  // ── Inline budget editing ──
+  const [editingKey, setEditingKey] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const inputRef = useRef(null);
+
+  function startEdit(key, currentLimit) {
+    setEditingKey(key);
+    setEditValue(currentLimit > 0 ? String(currentLimit) : "");
+    // focus the input on next render
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  function commitEdit() {
+    if (editingKey) {
+      const val = Number(editValue);
+      setBudget(editingKey, isNaN(val) || val < 0 ? 0 : val);
+    }
+    setEditingKey(null);
+  }
+
+  function handleEditKeyDown(e) {
+    if (e.key === "Enter") commitEdit();
+    if (e.key === "Escape") setEditingKey(null);
+  }
+
   const isWide = useWideLayout(768);
 
   return (
@@ -216,19 +263,78 @@ export function BudgetPanel() {
       >
         <div>
           {CATEGORIES.map((cat) => (
-            <BudgetBar
-              key={cat.key}
-              category={cat}
-              used={spent[cat.key] || 0}
-              limit={budgetLimits[cat.key] || 0}
-              animate={animate}
-            />
+            <div key={cat.key}>
+              <BudgetBar
+                category={cat}
+                used={spent[cat.key] || 0}
+                limit={budgetLimits[cat.key] || 0}
+                animate={animate}
+                onEditLimit={() => startEdit(cat.key, budgetLimits[cat.key] || 0)}
+              />
+              {editingKey === cat.key && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "-10px",
+                    marginBottom: "18px",
+                    padding: "8px 10px",
+                    background: "var(--bg-3)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", color: "var(--text-faint)", whiteSpace: "nowrap" }}>
+                    Budget {cat.label} :
+                  </span>
+                  <input
+                    ref={inputRef}
+                    type="number"
+                    min="0"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={commitEdit}
+                    onKeyDown={handleEditKeyDown}
+                    placeholder="0"
+                    style={{
+                      flex: 1,
+                      background: "var(--bg)",
+                      border: "1px solid var(--gold)",
+                      borderRadius: "6px",
+                      padding: "5px 8px",
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: "11px",
+                      color: "var(--text)",
+                      outline: "none",
+                    }}
+                  />
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", color: "var(--text-faint)" }}>DZD</span>
+                  <button
+                    onClick={commitEdit}
+                    style={{
+                      background: "var(--gold)",
+                      border: "none",
+                      borderRadius: "5px",
+                      padding: "4px 10px",
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: "9px",
+                      fontWeight: 600,
+                      color: "#020d0d",
+                      cursor: "pointer",
+                    }}
+                  >
+                    OK
+                  </button>
+                </div>
+              )}
+            </div>
           ))}
         </div>
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: isWide ? "1fr 1fr" : "1fr 1fr",
             gap: "10px",
             alignContent: "start",
           }}

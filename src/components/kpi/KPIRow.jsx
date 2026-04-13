@@ -2,14 +2,15 @@
 import {
   useKPI,
   useMediaGrid,
+  useWideLayout,
   formatDZD,
 } from "../../hooks/useSubscriptions.js";
-import { subscriptions } from "../../data/subscriptions.js";
+import { useStore } from "../../store/useStore.jsx";
 
 // BUG FIXED: removed local daysUntil, formatDZD, computeKPIs — now from hooks
 // BUG FIXED: useMediaGrid(4) — was useMediaGrid(undefined, 4) which is wrong
 
-function KPICard({ label, value, sub, accent, delta, deltaUp }) {
+function KPICard({ label, value, sub, accent, delta, deltaUp, compact }) {
   return (
     <div
       style={{
@@ -59,7 +60,7 @@ function KPICard({ label, value, sub, accent, delta, deltaUp }) {
       <div
         style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: "30px",
+          fontSize: compact ? "22px" : "30px",
           fontWeight: 700,
           color: "var(--text)",
           lineHeight: 1,
@@ -97,8 +98,10 @@ function KPICard({ label, value, sub, accent, delta, deltaUp }) {
 }
 
 export function KPIRow() {
+  const { subscriptions } = useStore();
   const { total, activeCount, savings, next } = useKPI();
-  const cols = useMediaGrid(4); // BUG FIXED: was useMediaGrid(undefined, 4)
+  const cols = useMediaGrid(4);
+  const isWide = useWideLayout(768);
 
   const cards = [
     {
@@ -152,7 +155,7 @@ export function KPIRow() {
       }}
     >
       {cards.map((card) => (
-        <KPICard key={card.label} {...card} />
+        <KPICard key={card.label} {...card} compact={!isWide} />
       ))}
     </div>
   );

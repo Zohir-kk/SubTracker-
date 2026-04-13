@@ -10,26 +10,15 @@
 // ─────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
-import { subscriptions } from "../../data/subscriptions";
+import { useStore } from "../../store/useStore.jsx";
 import { formatDZD, daysUntil } from "../../hooks/useSubscriptions.js";
+import { SubscriptionModal } from "../subscription/SubscriptionModal.jsx";
 
-// ── CATEGORY COLOR MAP ────────────────────────────────────────
-// Maps each subscription category to its accent color.
-// These match the design tokens in tokens.css.
-const CATEGORY_COLORS = {
-  internet: "var(--teal)",
-  transport: "var(--red)",
-  streaming: "var(--orange)",
-  vod: "var(--gold)",
-};
-
-// Maps each category to a readable French label for the UI
-const CATEGORY_LABELS = {
-  internet: "Internet",
-  transport: "Transport",
-  streaming: "Streaming",
-  vod: "VOD Arabe",
-};
+// Looks up color/label from the live categories array with a safe fallback
+function getCatInfo(categories, key) {
+  const cat = categories.find((c) => c.key === key);
+  return { color: cat?.color ?? "var(--teal)", label: cat?.label ?? key };
+}
 
 // ── STATUS BADGE ──────────────────────────────────────────────
 // Small pill shown in the top-right of each card.
@@ -132,8 +121,8 @@ function RenewalBar({ renewalDay, color }) {
 // ── SUBSCRIPTION CARD ─────────────────────────────────────────
 // One card per subscription. Shows icon, name, category, amount,
 // renewal info, status badge, and a progress bar.
-function SubscriptionCard({ sub }) {
-  const color = CATEGORY_COLORS[sub.category] || "var(--teal)";
+function SubscriptionCard({ sub, onClick, categories }) {
+  const { color, label: catLabel } = getCatInfo(categories, sub.category);
   const days = daysUntil(sub.renewalDay);
   const isSoon = days <= 7; // renewal within 7 days = show pulse dot
 
@@ -157,6 +146,7 @@ function SubscriptionCard({ sub }) {
         // Paused cards get a slightly lower opacity to feel "inactive"
         opacity: sub.status === "paused" ? 0.7 : 1,
       }}
+      onClick={onClick}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = "var(--border)";
         e.currentTarget.style.transform = "translateY(-1px)";
@@ -215,7 +205,7 @@ function SubscriptionCard({ sub }) {
           marginBottom: "10px",
         }}
       >
-        {CATEGORY_LABELS[sub.category]}
+        {catLabel}
       </div>
 
       {/* ── Amount in big Cormorant serif ── */}
@@ -279,15 +269,10 @@ function SubscriptionCard({ sub }) {
 // The filter buttons above the subscription grid.
 // "Tous" shows everything. Other tabs filter by category.
 // activeTab is controlled by the parent (SubscriptionPanel).
-function CategoryTabs({ activeTab, onChange }) {
-  // Tab definitions — value matches the category field in subscriptions.js
-  // "all" is a special value meaning "show everything"
+function CategoryTabs({ activeTab, onChange, categories }) {
   const tabs = [
     { value: "all", label: "Tous" },
-    { value: "internet", label: "Internet" },
-    { value: "transport", label: "Transport" },
-    { value: "streaming", label: "Streaming" },
-    { value: "vod", label: "VOD" },
+    ...categories.map((c) => ({ value: c.key, label: c.label })),
   ];
 
   return (
@@ -333,7 +318,20 @@ function CategoryTabs({ activeTab, onChange }) {
 // This is what you import in App.jsx.
 // It manages the active filter tab and renders the full panel.
 export function SubscriptionPanel() {
+  const { subscriptions, categories } = useStore();
   const [activeTab, setActiveTab] = useState("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalSub, setModalSub] = useState(null);
+
+  function openAdd() {
+    setModalSub(null);
+    setModalOpen(true);
+  }
+
+  function openEdit(sub) {
+    setModalSub(sub);
+    setModalOpen(true);
+  }
 
   // Responsive grid columns — same breakpoints as KPIRow
   // <480px = 1 col, <768px = 2 cols, else 3 cols
@@ -396,23 +394,49 @@ export function SubscriptionPanel() {
         >
           Mes Abonnements
         </div>
-        {/* Right side: shows how many subs are currently visible */}
+        {/* Right side: count + add button */}
         <div
           style={{
             marginLeft: "auto",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            letterSpacing: "1.5px",
-            textTransform: "uppercase",
-            color: "var(--text-faint)",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
           }}
         >
-          {filtered.length} / {subscriptions.length}
+          <div
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: "9px",
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              color: "var(--text-faint)",
+            }}
+          >
+            {filtered.length} / {subscriptions.length}
+          </div>
+          <button
+            onClick={openAdd}
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: "9px",
+              letterSpacing: "1px",
+              textTransform: "uppercase",
+              padding: "5px 12px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              background: "var(--gold)",
+              border: "1px solid var(--gold)",
+              color: "#020d0d",
+              fontWeight: 600,
+            }}
+          >
+            + Ajouter
+          </button>
         </div>
       </div>
 
       {/* ── Category filter tabs ── */}
-      <CategoryTabs activeTab={activeTab} onChange={setActiveTab} />
+      <CategoryTabs activeTab={activeTab} onChange={setActiveTab} categories={categories} />
 
       {/* ── Subscription grid ── */}
       {/* cols changes based on screen width: 1 on mobile, 2 on tablet, 3 on desktop */}
@@ -424,26 +448,63 @@ export function SubscriptionPanel() {
         }}
       >
         {filtered.map((sub) => (
-          <SubscriptionCard key={sub.id} sub={sub} />
+          <SubscriptionCard key={sub.id} sub={sub} onClick={() => openEdit(sub)} categories={categories} />
         ))}
       </div>
 
-      {/* Empty state — shown when a filtered category has no results */}
+      {/* Empty state */}
       {filtered.length === 0 && (
         <div
           style={{
             textAlign: "center",
             padding: "40px 0",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "10px",
-            letterSpacing: "1.5px",
-            textTransform: "uppercase",
-            color: "var(--text-faint)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "12px",
           }}
         >
-          Aucun abonnement dans cette catégorie
+          <div
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: "10px",
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              color: "var(--text-faint)",
+            }}
+          >
+            {activeTab === "all"
+              ? "Aucun abonnement pour l'instant"
+              : "Aucun abonnement dans cette catégorie"}
+          </div>
+          {activeTab === "all" && (
+            <button
+              onClick={openAdd}
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: "9px",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+                padding: "7px 16px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                background: "var(--gold)",
+                border: "1px solid var(--gold)",
+                color: "#020d0d",
+                fontWeight: 600,
+              }}
+            >
+              + Ajouter un abonnement
+            </button>
+          )}
         </div>
       )}
+
+      <SubscriptionModal
+        isOpen={modalOpen}
+        sub={modalSub}
+        onClose={() => { setModalOpen(false); setModalSub(null); }}
+      />
     </div>
   );
 }

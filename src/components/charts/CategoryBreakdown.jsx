@@ -1,6 +1,6 @@
 // src/components/charts/CategoryBreakdown.jsx
 import { useEffect, useState } from "react";
-import { subscriptions, CATEGORIES } from "../../data/subscriptions.js";
+import { useStore } from "../../store/useStore.jsx";
 import { formatDZD, computeBreakdown } from "../../hooks/useSubscriptions.js";
 
 function BreakdownRow({ item, animate }) {
@@ -93,6 +93,7 @@ function BreakdownRow({ item, animate }) {
 }
 
 export function CategoryBreakdown() {
+  const { subscriptions, categories: CATEGORIES } = useStore();
   const breakdown = computeBreakdown(subscriptions, CATEGORIES);
   const [animate, setAnimate] = useState(false);
   useEffect(() => {

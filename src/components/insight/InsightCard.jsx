@@ -1,9 +1,9 @@
 // src/components/insight/InsightCard.jsx
-import { subscriptions } from "../../data/subscriptions.js";
+import { useStore } from "../../store/useStore.jsx";
 import { formatDZD } from "../../hooks/useSubscriptions.js";
 
 
-function computeInsight() {
+function computeInsight(subscriptions) {
   const vodSubs = subscriptions.filter(
     (s) =>
       s.category === "vod" && (s.status === "active" || s.status === "trial"),
@@ -42,7 +42,8 @@ function computeInsight() {
 }
 
 export function InsightCard() {
-  const insight = computeInsight();
+  const { subscriptions } = useStore();
+  const insight = computeInsight(subscriptions);
   return (
     <div
       style={{

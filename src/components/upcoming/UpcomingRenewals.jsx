@@ -11,29 +11,16 @@
 //   - Pulse dot if renewing within 7 days
 // ─────────────────────────────────────────────────────────────
 
-import { subscriptions } from "../../data/subscriptions";
+import { useStore } from "../../store/useStore.jsx";
 import { formatDZD, daysUntil, renewalMonth } from "../../hooks/useSubscriptions.js";
-
-// Category colors — matches the rest of the dashboard
-const CATEGORY_COLORS = {
-  internet: "var(--teal)",
-  transport: "var(--red)",
-  streaming: "var(--orange)",
-  vod: "var(--gold)",
-};
-
-const CATEGORY_LABELS = {
-  internet: "Internet",
-  transport: "Transport",
-  streaming: "Streaming",
-  vod: "VOD Arabe",
-};
 
 // ── UPCOMING ITEM ─────────────────────────────────────────────
 // A single row in the renewals list.
-function UpcomingItem({ sub, days }) {
+function UpcomingItem({ sub, days, categories }) {
   const isSoon = days <= 7; // within 7 days = show pulse dot + red day number
-  const color = CATEGORY_COLORS[sub.category] || "var(--teal)";
+  const cat = categories.find((c) => c.key === sub.category);
+  const color = cat?.color ?? "var(--teal)";
+  const catLabel = cat?.label ?? sub.category;
   const month = renewalMonth(sub.renewalDay);
 
   return (
@@ -130,7 +117,7 @@ function UpcomingItem({ sub, days }) {
             color: color,
           }}
         >
-          {CATEGORY_LABELS[sub.category]}
+          {catLabel}
         </div>
       </div>
 
@@ -163,6 +150,8 @@ function UpcomingItem({ sub, days }) {
 
 // ── UPCOMING RENEWALS (MAIN EXPORT) ───────────────────────────
 export function UpcomingRenewals() {
+  const { subscriptions, categories } = useStore();
+
   // Only show active and trial subs — paused won't charge you
   const upcoming = subscriptions
     .filter((s) => s.status === "active" || s.status === "trial")
@@ -235,7 +224,7 @@ export function UpcomingRenewals() {
               index === upcoming.length - 1 ? { borderBottom: "none" } : {}
             }
           >
-            <UpcomingItem sub={sub} days={sub.days} />
+            <UpcomingItem sub={sub} days={sub.days} categories={categories} />
           </div>
         ))}
       </div>

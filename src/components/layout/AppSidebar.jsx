@@ -10,6 +10,8 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useStore } from "../../store/useStore.jsx";
+import { useWideLayout } from "../../hooks/useSubscriptions.js";
 import {
   LayoutDashboard,
   CreditCard,
@@ -29,8 +31,8 @@ import {
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
   { icon: CreditCard, label: "Abonnements", id: "abonnements" },
-  { icon: BarChart3, label: "Budget", id: "budget" },
   { icon: TrendingUp, label: "Tendances", id: "tendances" },
+  { icon: BarChart3, label: "Budget", id: "budget" },
   { icon: Settings, label: "Paramètres", id: "settings" },
 ];
 
@@ -86,11 +88,17 @@ function NavItem({ item, isActive, isCollapsed, onClick }) {
 }
 
 // ── APP SIDEBAR (MAIN EXPORT) ─────────────────────────────────
-export function AppSidebar() {
+export function AppSidebar({ isOpen, onClose }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { profile } = useStore();
+  const isDesktop = useWideLayout(768);
+
+  // On mobile: sidebar is a fixed overlay driven by isOpen prop
+  // On desktop: sidebar is always visible in the layout flow
+  const isMobileOverlay = !isDesktop;
 
   // Avoid hydration mismatch for theme — same pattern as AppHeader
   useEffect(() => setMounted(true), []);
@@ -103,38 +111,45 @@ export function AppSidebar() {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     setActiveSection(id);
+    if (isMobileOverlay) onClose();
   }
 
   const width = isCollapsed ? "68px" : "220px";
 
-  return (
+  const sidebar = (
     <aside
       style={{
-        width,
-        minWidth: width,
+        width: isMobileOverlay ? "240px" : width,
+        minWidth: isMobileOverlay ? "240px" : width,
         height: "100vh",
-        position: "sticky",
+        position: isMobileOverlay ? "fixed" : "sticky",
         top: 0,
+        left: 0,
         display: "flex",
         flexDirection: "column",
         background: "var(--bg-2)",
         borderRight: "1px solid var(--border-2)",
-        transition:
-          "width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: isMobileOverlay
+          ? "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+          : "width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        transform: isMobileOverlay
+          ? isOpen ? "translateX(0)" : "translateX(-100%)"
+          : "none",
         overflow: "hidden",
-        zIndex: 50,
+        zIndex: 200,
         fontFamily: "'IBM Plex Mono', monospace",
       }}
     >
-      {/* ── Header: logo + collapse button ── */}
+      {/* ── Header: logo + single toggle button ── */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: isCollapsed ? "center" : "space-between",
-          padding: "20px 16px 16px",
+          justifyContent: "space-between",
+          padding: isCollapsed ? "18px 8px 14px" : "20px 12px 16px 16px",
           borderBottom: "1px solid var(--border-2)",
           marginBottom: "8px",
+          minHeight: "64px",
         }}
       >
         {/* Logo diamond + wordmark */}
@@ -144,6 +159,7 @@ export function AppSidebar() {
             alignItems: "center",
             gap: "10px",
             overflow: "hidden",
+            flexShrink: 0,
           }}
         >
           <svg
@@ -181,10 +197,10 @@ export function AppSidebar() {
           )}
         </div>
 
-        {/* Collapse toggle — only visible when expanded */}
-        {!isCollapsed && (
+        {/* Single toggle button — always in flow, no absolute positioning */}
+        {!isMobileOverlay && (
           <button
-            onClick={() => setIsCollapsed(true)}
+            onClick={() => setIsCollapsed((v) => !v)}
             style={{
               background: "transparent",
               border: "1px solid var(--border-2)",
@@ -195,30 +211,46 @@ export function AppSidebar() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              flexShrink: 0,
               transition: "all 0.2s ease",
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.color = "var(--text)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--border-2)";
+              e.currentTarget.style.color = "var(--text-faint)";
+            }}
           >
-            <ChevronLeft size={14} />
+            <ChevronLeft
+              size={14}
+              style={{
+                transform: isCollapsed ? "rotate(180deg)" : "none",
+                transition: "transform 0.3s ease",
+              }}
+            />
           </button>
         )}
 
-        {/* Expand toggle — only visible when collapsed */}
-        {isCollapsed && (
+        {/* Mobile: close button */}
+        {isMobileOverlay && (
           <button
-            onClick={() => setIsCollapsed(false)}
+            onClick={onClose}
             style={{
-              position: "absolute",
-              top: "20px",
-              right: "8px",
               background: "transparent",
-              border: "none",
+              border: "1px solid var(--border-2)",
+              borderRadius: "6px",
+              padding: "4px",
               cursor: "pointer",
               color: "var(--text-faint)",
               display: "flex",
-              padding: "4px",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
             }}
           >
-            <ChevronLeft size={14} style={{ transform: "rotate(180deg)" }} />
+            <ChevronLeft size={14} />
           </button>
         )}
       </div>
@@ -321,7 +353,7 @@ export function AppSidebar() {
               fontWeight: 500,
             }}
           >
-            AK
+            {profile.initials}
           </div>
           {!isCollapsed && (
             <div style={{ minWidth: 0 }}>
@@ -334,7 +366,7 @@ export function AppSidebar() {
                   textOverflow: "ellipsis",
                 }}
               >
-                Zohir K.
+                {profile.name}
               </div>
               <div
                 style={{
@@ -352,4 +384,27 @@ export function AppSidebar() {
       </div>
     </aside>
   );
+
+  if (isMobileOverlay) {
+    return (
+      <>
+        {/* Backdrop — tapping it closes the sidebar */}
+        <div
+          onClick={onClose}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 199,
+            opacity: isOpen ? 1 : 0,
+            pointerEvents: isOpen ? "auto" : "none",
+            transition: "opacity 0.3s ease",
+          }}
+        />
+        {sidebar}
+      </>
+    );
+  }
+
+  return sidebar;
 }
