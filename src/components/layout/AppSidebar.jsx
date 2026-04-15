@@ -88,7 +88,10 @@ function NavItem({ item, isActive, isCollapsed, onClick }) {
 }
 
 // ── APP SIDEBAR (MAIN EXPORT) ─────────────────────────────────
-export function AppSidebar({ isOpen, onClose }) {
+// Items that switch pages instead of scrolling to a section
+const PAGE_ITEMS = new Set(["settings"]);
+
+export function AppSidebar({ isOpen, onClose, currentPage, onNavigate }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [mounted, setMounted] = useState(false);
@@ -103,15 +106,31 @@ export function AppSidebar({ isOpen, onClose }) {
   // Avoid hydration mismatch for theme — same pattern as AppHeader
   useEffect(() => setMounted(true), []);
 
+  // Keep active highlight in sync when parent changes the page
+  useEffect(() => {
+    if (currentPage === "settings") setActiveSection("settings");
+    else if (currentPage === "dashboard") setActiveSection("dashboard");
+  }, [currentPage]);
+
   const isDark = theme === "dark";
 
-  // Scrolls to a section by its HTML id attribute.
-  // Sections in App.jsx need matching id="dashboard", id="budget" etc.
+  // Navigates to a section or page depending on the item type.
   function scrollToSection(id) {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (PAGE_ITEMS.has(id)) {
+      onNavigate(id);
+      setActiveSection(id);
+      if (isMobileOverlay) onClose();
+      return;
+    }
+    // Switch back to dashboard if currently on another page
+    if (currentPage !== "dashboard") onNavigate("dashboard");
     setActiveSection(id);
     if (isMobileOverlay) onClose();
+    // Give Dashboard time to mount before scrolling
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
   }
 
   const width = isCollapsed ? "68px" : "220px";

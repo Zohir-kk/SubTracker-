@@ -120,7 +120,7 @@ function FormSelect({ children, ...props }) {
 
 // ── SUBSCRIPTION MODAL (MAIN EXPORT) ─────────────────────────
 export function SubscriptionModal({ isOpen, sub, onClose }) {
-  const { subscriptions, add, update, remove, categories, addCategory, removeCategory } = useStore();
+  const { subscriptions, add, update, remove, categories, addCategory, updateCategory, removeCategory } = useStore();
   const [form, setForm] = useState(EMPTY_FORM);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errors, setErrors] = useState({});
@@ -133,6 +133,12 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
   const [newCatLabel, setNewCatLabel] = useState("");
   const [newCatIcon, setNewCatIcon] = useState("⭐");
   const [newCatColor, setNewCatColor] = useState(COLOR_PALETTE[0]);
+
+  // ── Edit-category inline form ──
+  const [editCatKey, setEditCatKey] = useState(null);
+  const [editCatLabel, setEditCatLabel] = useState("");
+  const [editCatIcon, setEditCatIcon] = useState("");
+  const [editCatColor, setEditCatColor] = useState(COLOR_PALETTE[0]);
 
   const isEdit = Boolean(sub);
 
@@ -162,7 +168,22 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
     setNewCatLabel("");
     setNewCatIcon("⭐");
     setNewCatColor(COLOR_PALETTE[0]);
+    setEditCatKey(null);
   }, [isOpen, sub]);
+
+  function startEditCat(cat) {
+    setEditCatKey(cat.key);
+    setEditCatLabel(cat.label);
+    setEditCatIcon(cat.icon);
+    setEditCatColor(cat.color);
+    setShowNewCat(false);
+  }
+
+  function saveEditCat() {
+    if (!editCatLabel.trim()) return;
+    updateCategory(editCatKey, { label: editCatLabel.trim(), icon: editCatIcon, color: editCatColor });
+    setEditCatKey(null);
+  }
 
   if (!isOpen) return null;
 
@@ -510,74 +531,107 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                 {categories.map((cat) => {
                   const usedBy = subscriptions.filter((s) => s.category === cat.key).length;
                   const canDelete = usedBy === 0;
+                  const isEditingThis = editCatKey === cat.key;
                   return (
-                    <div
-                      key={cat.key}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        padding: "6px 8px",
-                        borderRadius: "7px",
-                        background: "var(--bg-2)",
-                      }}
-                    >
+                    <div key={cat.key}>
+                      {/* ── Row ── */}
                       <div
                         style={{
-                          width: "26px",
-                          height: "26px",
-                          borderRadius: "6px",
-                          background: `${cat.color}18`,
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "13px",
-                          flexShrink: 0,
+                          gap: "8px",
+                          padding: "6px 8px",
+                          borderRadius: isEditingThis ? "7px 7px 0 0" : "7px",
+                          background: "var(--bg-2)",
+                          border: isEditingThis ? "1px solid var(--gold)" : "1px solid transparent",
+                          borderBottom: isEditingThis ? "none" : undefined,
                         }}
                       >
-                        {cat.icon}
-                      </div>
-                      <span
-                        style={{
-                          fontFamily: "'IBM Plex Mono', monospace",
-                          fontSize: "10px",
-                          color: "var(--text)",
-                          flex: 1,
-                        }}
-                      >
-                        {cat.label}
-                      </span>
-                      {usedBy > 0 && (
-                        <span
+                        <div style={{ width: "26px", height: "26px", borderRadius: "6px", background: `${cat.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", flexShrink: 0 }}>
+                          {cat.icon}
+                        </div>
+                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--text)", flex: 1 }}>
+                          {cat.label}
+                        </span>
+                        {usedBy > 0 && (
+                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", color: "var(--text-faint)" }}>
+                            {usedBy} abo.
+                          </span>
+                        )}
+                        {/* Edit button */}
+                        <button
+                          onClick={() => isEditingThis ? setEditCatKey(null) : startEditCat(cat)}
+                          title={isEditingThis ? "Annuler" : "Modifier"}
                           style={{
-                            fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: "8px",
-                            color: "var(--text-faint)",
+                            background: "transparent", border: "none",
+                            cursor: "pointer",
+                            color: isEditingThis ? "var(--gold)" : "var(--text-faint)",
+                            fontSize: "12px", lineHeight: 1, padding: "2px 4px", borderRadius: "4px", flexShrink: 0,
                           }}
                         >
-                          {usedBy} abo.
-                        </span>
+                          ✏
+                        </button>
+                        {/* Delete button */}
+                        <button
+                          onClick={() => { if (canDelete) removeCategory(cat.key); }}
+                          title={canDelete ? "Supprimer" : `Utilisée par ${usedBy} abonnement(s)`}
+                          style={{
+                            background: "transparent", border: "none",
+                            cursor: canDelete ? "pointer" : "not-allowed",
+                            color: canDelete ? "var(--red)" : "var(--border)",
+                            fontSize: "16px", lineHeight: 1, padding: "2px 4px", borderRadius: "4px", flexShrink: 0,
+                            opacity: canDelete ? 1 : 0.4,
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      {/* ── Inline edit form ── */}
+                      {isEditingThis && (
+                        <div style={{ background: "var(--bg-2)", border: "1px solid var(--gold)", borderTop: "none", borderRadius: "0 0 7px 7px", padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: "8px" }}>
+                            <FormInput
+                              value={editCatIcon}
+                              onChange={(e) => setEditCatIcon(e.target.value)}
+                              placeholder="⭐"
+                              style={{ textAlign: "center", fontSize: "16px" }}
+                            />
+                            <FormInput
+                              value={editCatLabel}
+                              onChange={(e) => setEditCatLabel(e.target.value)}
+                              placeholder="Nom"
+                            />
+                          </div>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                            {COLOR_PALETTE.map((c) => (
+                              <button
+                                key={c}
+                                onClick={() => setEditCatColor(c)}
+                                style={{
+                                  width: "20px", height: "20px", borderRadius: "50%", background: c,
+                                  border: editCatColor === c ? "2px solid var(--text)" : "2px solid transparent",
+                                  cursor: "pointer", padding: 0, flexShrink: 0,
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                            <button
+                              onClick={() => setEditCatKey(null)}
+                              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", letterSpacing: "1px", textTransform: "uppercase", padding: "5px 10px", borderRadius: "6px", cursor: "pointer", background: "transparent", border: "1px solid var(--border-2)", color: "var(--text-faint)" }}
+                            >
+                              Annuler
+                            </button>
+                            <button
+                              onClick={saveEditCat}
+                              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", letterSpacing: "1px", textTransform: "uppercase", padding: "5px 12px", borderRadius: "6px", cursor: "pointer", background: "var(--gold)", border: "none", color: "#020d0d", fontWeight: 600, opacity: editCatLabel.trim() ? 1 : 0.4 }}
+                            >
+                              Enregistrer
+                            </button>
+                          </div>
+                        </div>
                       )}
-                      <button
-                        onClick={() => {
-                          if (canDelete) removeCategory(cat.key);
-                        }}
-                        title={canDelete ? "Supprimer" : `Utilisée par ${usedBy} abonnement(s)`}
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          cursor: canDelete ? "pointer" : "not-allowed",
-                          color: canDelete ? "var(--red)" : "var(--border)",
-                          fontSize: "16px",
-                          lineHeight: 1,
-                          padding: "2px 4px",
-                          borderRadius: "4px",
-                          flexShrink: 0,
-                          opacity: canDelete ? 1 : 0.4,
-                        }}
-                      >
-                        ×
-                      </button>
                     </div>
                   );
                 })}

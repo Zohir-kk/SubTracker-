@@ -92,6 +92,10 @@ export function StoreProvider({ children }) {
     setCategoriesState((prev) => [...prev, cat]);
   }
 
+  function updateCategory(key, updates) {
+    setCategoriesState((prev) => prev.map((c) => c.key === key ? { ...c, ...updates } : c));
+  }
+
   function removeCategory(key) {
     setCategoriesState((prev) => prev.filter((c) => c.key !== key));
   }
@@ -102,7 +106,7 @@ export function StoreProvider({ children }) {
 
   return (
     <StoreContext.Provider
-      value={{ subscriptions, budgetLimits, categories, profile, add, update, remove, setBudget, addCategory, removeCategory, setProfile }}
+      value={{ subscriptions, budgetLimits, categories, profile, add, update, remove, setBudget, addCategory, updateCategory, removeCategory, setProfile }}
     >
       {children}
     </StoreContext.Provider>

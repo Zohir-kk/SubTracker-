@@ -1,11 +1,11 @@
 // src/components/layout/AppHeader.jsx
 
-import { Sun, Moon, Menu } from "lucide-react";
+import { Sun, Moon, Menu, Bell } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "../../store/useStore.jsx";
 import { ProfileModal } from "../settings/ProfileModal.jsx";
-import { useWideLayout } from "../../hooks/useSubscriptions.js";
+import { useWideLayout, daysUntil, formatDZD } from "../../hooks/useSubscriptions.js";
 
 // ── Logo ──────────────────────────────
 function Logo() {
@@ -183,6 +183,147 @@ function UserAvatar({ initials = "AK", onClick }) {
   );
 }
 
+// ── Notification Bell ──────────────────
+function NotificationBell() {
+  const { subscriptions, categories } = useStore();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  const urgent = subscriptions
+    .filter((s) => s.status === "active" || s.status === "trial")
+    .map((s) => ({ ...s, days: daysUntil(s.renewalDay) }))
+    .filter((s) => s.days <= 3)
+    .sort((a, b) => a.days - b.days);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          position: "relative",
+          background: open ? "var(--bg-3)" : "transparent",
+          border: "1px solid var(--border-2)",
+          borderRadius: "8px",
+          padding: "6px",
+          cursor: "pointer",
+          color: urgent.length > 0 ? "var(--red)" : "var(--text-faint)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "all 0.2s ease",
+        }}
+        title="Notifications de renouvellement"
+      >
+        <Bell size={16} />
+        {urgent.length > 0 && (
+          <div style={{
+            position: "absolute",
+            top: "-5px",
+            right: "-5px",
+            width: "16px",
+            height: "16px",
+            borderRadius: "50%",
+            background: "var(--red)",
+            color: "#fff",
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: "9px",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "2px solid var(--bg)",
+          }}>
+            {urgent.length}
+          </div>
+        )}
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 8px)",
+          right: 0,
+          width: "280px",
+          background: "var(--bg-2)",
+          border: "1px solid var(--border)",
+          borderRadius: "12px",
+          boxShadow: "var(--shadow-card)",
+          zIndex: 500,
+          overflow: "hidden",
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "12px 14px",
+            borderBottom: "1px solid var(--border-2)",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--red)", flexShrink: 0 }} />
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>
+              Renouvellements proches
+            </span>
+          </div>
+
+          {urgent.length === 0 ? (
+            <div style={{ padding: "16px 14px", fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--text-faint)", textAlign: "center" }}>
+              Aucun renouvellement dans 3 jours
+            </div>
+          ) : (
+            <div>
+              {urgent.map((s) => {
+                const cat = categories.find((c) => c.key === s.category);
+                return (
+                  <div key={s.id} style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "10px 14px",
+                    borderBottom: "1px solid var(--border-2)",
+                  }}>
+                    {/* Icon */}
+                    <div style={{
+                      width: "30px", height: "30px", borderRadius: "7px",
+                      background: `${cat?.color ?? "var(--teal)"}18`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "14px", flexShrink: 0,
+                    }}>
+                      {s.icon}
+                    </div>
+                    {/* Name + days */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {s.name}
+                      </div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", color: s.days === 0 ? "var(--red)" : "var(--text-faint)", letterSpacing: "1px", marginTop: "2px" }}>
+                        {s.days === 0 ? "Aujourd'hui" : s.days === 1 ? "Demain" : `Dans ${s.days} jours`}
+                      </div>
+                    </div>
+                    {/* Amount */}
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--red)", fontWeight: 600, flexShrink: 0 }}>
+                      {formatDZD(s.amount)} DZD
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── AppHeader ──────────────────────────
 export function AppHeader({ onMenuClick }) {
   const { profile } = useStore();
@@ -234,6 +375,7 @@ export function AppHeader({ onMenuClick }) {
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "auto" }}>
           {/* Month badge hidden on mobile — saves space */}
           {isDesktop && <MonthBadge />}
+          <NotificationBell />
           <ThemeToggle />
           <UserAvatar initials={profile.initials} onClick={() => setProfileOpen(true)} />
         </div>
