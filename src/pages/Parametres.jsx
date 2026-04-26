@@ -1,222 +1,13 @@
-// src/pages/Parametres.jsx
-// ─────────────────────────────────────────────────────────────
-// Settings page — Profile + Categories sections.
-// ─────────────────────────────────────────────────────────────
-
 import { useState, useEffect } from "react";
 import { useStore } from "../store/useStore.jsx";
-import { useWideLayout } from "../hooks/useSubscriptions.js";
+import { cn } from "../lib/utils.js";
 
-// ── SECTION WRAPPER ───────────────────────────────────────────
-function Section({ title, children }) {
-  return (
-    <div
-      style={{
-        background: "var(--bg-2)",
-        border: "1px solid var(--border-2)",
-        borderRadius: "16px",
-        padding: "24px",
-        marginBottom: "16px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          marginBottom: "24px",
-        }}
-      >
-        <div
-          style={{
-            width: "6px",
-            height: "6px",
-            borderRadius: "50%",
-            background: "var(--gold)",
-            flexShrink: 0,
-          }}
-        />
-        <span
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "17px",
-            fontWeight: 600,
-            color: "var(--text)",
-          }}
-        >
-          {title}
-        </span>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-// ── FIELD ─────────────────────────────────────────────────────
-function Field({ label, children }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-      <div
-        style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: "8px",
-          letterSpacing: "1.5px",
-          textTransform: "uppercase",
-          color: "var(--text-faint)",
-        }}
-      >
-        {label}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-// ── PROFILE SECTION ───────────────────────────────────────────
-function ProfileSection() {
-  const { profile, setProfile } = useStore();
-  const [name, setName] = useState(profile.name || "");
-  const [initials, setInitials] = useState(profile.initials || "");
-  const [saved, setSaved] = useState(false);
-
-  // Keep local state in sync if profile changes externally
-  useEffect(() => {
-    setName(profile.name || "");
-    setInitials(profile.initials || "");
-  }, [profile]);
-
-  const previewInitials =
-    initials.trim().toUpperCase().slice(0, 3) ||
-    name.trim().slice(0, 2).toUpperCase() ||
-    "?";
-
-  const isDirty =
-    name.trim() !== profile.name || initials.trim().toUpperCase().slice(0, 3) !== profile.initials;
-
-  function handleSave() {
-    const trimmedName = name.trim();
-    if (!trimmedName) return;
-    const trimmedInitials =
-      initials.trim().toUpperCase().slice(0, 3) ||
-      trimmedName.slice(0, 2).toUpperCase();
-    setProfile({ name: trimmedName, initials: trimmedInitials });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
-
-  const inputStyle = {
-    width: "100%",
-    background: "var(--bg)",
-    border: "1px solid var(--border-2)",
-    borderRadius: "8px",
-    padding: "9px 12px",
-    fontFamily: "'IBM Plex Mono', monospace",
-    fontSize: "11px",
-    color: "var(--text)",
-    outline: "none",
-    boxSizing: "border-box",
-    transition: "border-color 0.2s ease",
-  };
-
-  return (
-    <Section title="Profil utilisateur">
-      {/* Avatar preview */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "28px" }}>
-        <div
-          style={{
-            width: "72px",
-            height: "72px",
-            borderRadius: "50%",
-            background: "var(--gold)",
-            color: "#020d0d",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "20px",
-            fontWeight: 600,
-            boxShadow: "var(--shadow-gold)",
-            transition: "all 0.2s ease",
-          }}
-        >
-          {previewInitials}
-        </div>
-      </div>
-
-      {/* Fields */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "400px" }}>
-        <Field label="Nom affiché">
-          <input
-            value={name}
-            onChange={(e) => { setName(e.target.value); setSaved(false); }}
-            placeholder="ex: Zohir K."
-            style={inputStyle}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-2)")}
-          />
-        </Field>
-
-        <Field label="Initiales (2–3 caractères)">
-          <input
-            value={initials}
-            onChange={(e) => { setInitials(e.target.value.toUpperCase().slice(0, 3)); setSaved(false); }}
-            placeholder="ex: ZK"
-            maxLength={3}
-            style={{ ...inputStyle, textTransform: "uppercase", letterSpacing: "3px" }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-2)")}
-          />
-        </Field>
-
-        {/* Save */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "4px" }}>
-          <button
-            onClick={handleSave}
-            disabled={!name.trim() || !isDirty}
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: "9px",
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-              padding: "9px 20px",
-              borderRadius: "8px",
-              cursor: name.trim() && isDirty ? "pointer" : "not-allowed",
-              background: name.trim() && isDirty ? "var(--gold)" : "var(--border-2)",
-              border: "none",
-              color: name.trim() && isDirty ? "#020d0d" : "var(--text-faint)",
-              fontWeight: 600,
-              transition: "all 0.2s ease",
-            }}
-          >
-            Enregistrer
-          </button>
-
-          {saved && (
-            <span
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: "9px",
-                letterSpacing: "1px",
-                color: "var(--gold)",
-                textTransform: "uppercase",
-              }}
-            >
-              Sauvegardé
-            </span>
-          )}
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-// ── CATEGORIES SECTION ────────────────────────────────────────
 const EMOJI_GRID = [
-  "📡", "📶", "🌐", "☁️", "🔌",   // internet / tech
-  "🎬", "🎭", "🎵", "🎮", "📺",   // media / entertainment
-  "🚇", "🚌", "🚗", "✈️", "🚲",   // transport
-  "💼", "📰", "📚", "🏋️", "🏥",   // work / lifestyle
-  "🛒", "🍔", "☕", "🎁", "💡",   // misc
+  "📡", "📶", "🌐", "☁️", "🔌",
+  "🎬", "🎭", "🎵", "🎮", "📺",
+  "🚇", "🚌", "🚗", "✈️", "🚲",
+  "💼", "📰", "📚", "🏋️", "🏥",
+  "🛒", "🍔", "☕", "🎁", "💡",
 ];
 
 const COLOR_PALETTE = [
@@ -230,6 +21,156 @@ const COLOR_PALETTE = [
   "#fbbf24",
 ];
 
+const inputCls = "w-full bg-bg border border-border-2 rounded-lg px-3 py-2 font-plex text-[11px] text-text outline-none focus:border-gold box-border transition-colors duration-200";
+
+function Section({ title, children }) {
+  return (
+    <div className="bg-bg-2 border border-border-2 rounded-2xl p-6 mb-4">
+      <div className="flex items-center gap-2.5 mb-6">
+        <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+        <span className="font-playfair text-[17px] font-semibold text-text">{title}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div className="flex flex-col gap-[5px]">
+      <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-text-faint">{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function EmojiPicker({ selected, onSelect }) {
+  return (
+    <div className="grid gap-1.5 mt-1.5 mb-2.5" style={{ gridTemplateColumns: "repeat(13, 36px)" }}>
+      {EMOJI_GRID.map((emoji) => (
+        <button
+          key={emoji}
+          onClick={() => onSelect(emoji)}
+          className={cn(
+            "w-9 h-9 rounded-lg cursor-pointer text-lg flex items-center justify-center p-0 transition-all duration-150 border",
+            selected === emoji
+              ? "border-2 border-gold bg-gold-dim"
+              : "border border-border-2 bg-bg-3",
+          )}
+        >
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ColorPicker({ selected, onSelect }) {
+  return (
+    <div className="flex gap-1.5 flex-wrap mt-1 mb-3">
+      {COLOR_PALETTE.map((c) => (
+        <button
+          key={c}
+          onClick={() => onSelect(c)}
+          className="w-[22px] h-[22px] rounded-full cursor-pointer p-0 shrink-0 border-2 transition-colors duration-150"
+          style={{
+            background: c,
+            borderColor: selected === c ? "var(--text)" : "transparent",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ProfileSection() {
+  const { profile, setProfile } = useStore();
+  const [name, setName] = useState(profile.name || "");
+  const [initials, setInitials] = useState(profile.initials || "");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setName(profile.name || "");
+    setInitials(profile.initials || "");
+  }, [profile]);
+
+  const previewInitials =
+    initials.trim().toUpperCase().slice(0, 3) ||
+    name.trim().slice(0, 2).toUpperCase() ||
+    "?";
+
+  const isDirty =
+    name.trim() !== profile.name ||
+    initials.trim().toUpperCase().slice(0, 3) !== profile.initials;
+
+  function handleSave() {
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+    const trimmedInitials =
+      initials.trim().toUpperCase().slice(0, 3) ||
+      trimmedName.slice(0, 2).toUpperCase();
+    setProfile({ name: trimmedName, initials: trimmedInitials });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  const canSave = name.trim() && isDirty;
+
+  return (
+    <Section title="Profil utilisateur">
+      <div className="flex justify-center mb-7">
+        <div
+          className="w-[72px] h-[72px] rounded-full bg-gold flex items-center justify-center font-plex text-xl font-semibold shadow-gold"
+          style={{ color: "#020d0d" }}
+        >
+          {previewInitials}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 max-w-[400px]">
+        <Field label="Nom affiché">
+          <input
+            value={name}
+            onChange={(e) => { setName(e.target.value); setSaved(false); }}
+            placeholder="ex: Zohir K."
+            className={inputCls}
+          />
+        </Field>
+
+        <Field label="Initiales (2–3 caractères)">
+          <input
+            value={initials}
+            onChange={(e) => { setInitials(e.target.value.toUpperCase().slice(0, 3)); setSaved(false); }}
+            placeholder="ex: ZK"
+            maxLength={3}
+            className={cn(inputCls, "uppercase tracking-[3px]")}
+          />
+        </Field>
+
+        <div className="flex items-center gap-3 mt-1">
+          <button
+            onClick={handleSave}
+            disabled={!canSave}
+            className="font-plex text-[9px] tracking-[1px] uppercase px-5 py-[9px] rounded-lg font-semibold border-none transition-all duration-200"
+            style={{
+              cursor: canSave ? "pointer" : "not-allowed",
+              background: canSave ? "var(--gold)" : "var(--border-2)",
+              color: canSave ? "#020d0d" : "var(--text-faint)",
+            }}
+          >
+            Enregistrer
+          </button>
+          {saved && (
+            <span className="font-plex text-[9px] tracking-[1px] text-gold uppercase">
+              Sauvegardé
+            </span>
+          )}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 const EMPTY_NEW = { label: "", icon: "", color: COLOR_PALETTE[0] };
 
 function CategoriesSection() {
@@ -241,7 +182,6 @@ function CategoriesSection() {
   const [editingKey, setEditingKey] = useState(null);
   const [editForm, setEditForm] = useState({});
 
-  // Subscriptions grouped by category key
   const subsByCategory = subscriptions.reduce((acc, s) => {
     if (!acc[s.category]) acc[s.category] = [];
     acc[s.category].push(s);
@@ -253,42 +193,26 @@ function CategoriesSection() {
     setEditForm({ label: cat.label, icon: cat.icon, color: cat.color });
     setPendingDelete(null);
   }
-
-  function cancelEdit() {
-    setEditingKey(null);
-    setEditForm({});
-  }
-
+  function cancelEdit() { setEditingKey(null); setEditForm({}); }
   function saveEdit(key) {
     const label = editForm.label?.trim();
     if (!label) return;
     updateCategory(key, { label, icon: editForm.icon, color: editForm.color });
     cancelEdit();
   }
-
   function handleDelete(cat) {
     const affected = subsByCategory[cat.key] || [];
-    if (affected.length === 0) {
-      removeCategory(cat.key);
-    } else {
-      setPendingDelete(cat.key);
-    }
+    if (affected.length === 0) removeCategory(cat.key);
+    else setPendingDelete(cat.key);
   }
-
   function confirmDelete(key) {
     (subsByCategory[key] || []).forEach((s) => remove(s.id));
     removeCategory(key);
     setPendingDelete(null);
   }
-
   function slugify(str) {
-    return str
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "_")
-      .replace(/[^a-z0-9_]/g, "");
+    return str.toLowerCase().trim().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
   }
-
   function handleAdd() {
     const label = form.label.trim();
     const icon = form.icon.trim();
@@ -303,185 +227,91 @@ function CategoriesSection() {
     setError("");
   }
 
-  const inputStyle = {
-    background: "var(--bg)",
-    border: "1px solid var(--border-2)",
-    borderRadius: "8px",
-    padding: "8px 10px",
-    fontFamily: "'IBM Plex Mono', monospace",
-    fontSize: "11px",
-    color: "var(--text)",
-    outline: "none",
-    boxSizing: "border-box",
-    transition: "border-color 0.2s ease",
-  };
-
   return (
     <Section title="Catégories">
-      {/* Category list */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+      <div className="flex flex-col gap-2 mb-4">
         {categories.map((cat) => {
           const affected = subsByCategory[cat.key] || [];
           const isPending = pendingDelete === cat.key;
           const isEditing = editingKey === cat.key;
           const hasPanel = isPending || isEditing;
+
           return (
             <div key={cat.key}>
-              {/* ── Row ── */}
+              {/* Row */}
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "10px 12px",
-                  background: isPending ? "var(--bg-3)" : "var(--bg)",
-                  border: isPending ? "1px solid var(--red)" : isEditing ? "1px solid var(--gold)" : "1px solid var(--border-2)",
-                  borderRadius: hasPanel ? "10px 10px 0 0" : "10px",
-                  transition: "all 0.2s ease",
-                }}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 transition-all duration-200 border",
+                  hasPanel ? "rounded-[10px_10px_0_0]" : "rounded-[10px]",
+                  isPending ? "bg-bg-3 border-red" :
+                  isEditing ? "bg-bg border-gold" : "bg-bg border-border-2",
+                )}
               >
-                <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: cat.color, flexShrink: 0 }} />
-                <span style={{ fontSize: "16px", lineHeight: 1, flexShrink: 0 }}>{cat.icon}</span>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", letterSpacing: "1px", color: "var(--text)", flex: 1 }}>
-                  {cat.label}
-                </span>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", letterSpacing: "1px", color: "var(--text-faint)", background: "var(--bg-3)", padding: "2px 6px", borderRadius: "4px" }}>
+                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: cat.color }} />
+                <span className="text-base leading-none shrink-0">{cat.icon}</span>
+                <span className="font-plex text-[10px] tracking-[1px] text-text flex-1">{cat.label}</span>
+                <span className="font-plex text-[8px] tracking-[1px] text-text-faint bg-bg-3 px-1.5 py-0.5 rounded">
                   {cat.key}
                 </span>
                 {affected.length > 0 && (
-                  <span style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: "8px",
-                    letterSpacing: "1px",
-                    textTransform: "uppercase",
-                    color: "var(--text-faint)",
-                    padding: "3px 8px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border-2)",
-                    flexShrink: 0,
-                  }}>
+                  <span className="font-plex text-[8px] tracking-[1px] uppercase text-text-faint px-2 py-[3px] rounded-md border border-border-2 shrink-0">
                     En usage
                   </span>
                 )}
-                {/* Pencil button */}
                 <button
                   onClick={() => isEditing ? cancelEdit() : startEdit(cat)}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid transparent",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    color: isEditing ? "var(--gold)" : "var(--text-faint)",
-                    fontSize: "13px",
-                    lineHeight: 1,
-                    padding: "3px 6px",
-                    flexShrink: 0,
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.borderColor = "var(--gold)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = isEditing ? "var(--gold)" : "var(--text-faint)"; e.currentTarget.style.borderColor = "transparent"; }}
+                  className={cn(
+                    "bg-transparent border border-transparent rounded-md cursor-pointer text-[13px] leading-none px-1.5 py-[3px] shrink-0 transition-all duration-150 hover:text-gold hover:border-gold",
+                    isEditing ? "text-gold" : "text-text-faint",
+                  )}
                   title={isEditing ? "Annuler" : "Modifier"}
                 >
                   ✏
                 </button>
-                {/* Delete button */}
                 <button
                   onClick={() => isPending ? setPendingDelete(null) : handleDelete(cat)}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid transparent",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    color: isPending ? "var(--red)" : "var(--text-faint)",
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: "16px",
-                    lineHeight: 1,
-                    padding: "2px 6px",
-                    flexShrink: 0,
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "var(--red)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = isPending ? "var(--red)" : "var(--text-faint)"; e.currentTarget.style.borderColor = "transparent"; }}
+                  className={cn(
+                    "bg-transparent border border-transparent rounded-md cursor-pointer text-base leading-none px-1.5 py-0.5 font-plex shrink-0 transition-all duration-150 hover:text-red hover:border-red",
+                    isPending ? "text-red" : "text-text-faint",
+                  )}
                   title={isPending ? "Annuler" : "Supprimer"}
                 >
                   ×
                 </button>
               </div>
 
-              {/* ── Edit panel ── */}
+              {/* Edit panel */}
               {isEditing && (
-                <div style={{
-                  background: "var(--bg)",
-                  border: "1px solid var(--gold)",
-                  borderTop: "none",
-                  borderRadius: "0 0 10px 10px",
-                  padding: "14px",
-                }}>
+                <div className="bg-bg border border-gold border-t-0 rounded-[0_0_10px_10px] p-3.5">
                   <Field label="Nom">
                     <input
                       value={editForm.label || ""}
                       onChange={(e) => setEditForm((f) => ({ ...f, label: e.target.value }))}
-                      style={{ ...inputStyle, width: "100%", marginBottom: "10px" }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-2)")}
+                      className={cn(inputCls, "mb-2.5")}
                     />
                   </Field>
                   <Field label="Icône">
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(13, 36px)", gap: "6px", marginTop: "6px", marginBottom: "10px" }}>
-                      {EMOJI_GRID.map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => setEditForm((f) => ({ ...f, icon: emoji }))}
-                          style={{
-                            width: "36px", height: "36px", borderRadius: "8px",
-                            border: editForm.icon === emoji ? "2px solid var(--gold)" : "1px solid var(--border-2)",
-                            background: editForm.icon === emoji ? "var(--gold-dim)" : "var(--bg-3)",
-                            cursor: "pointer", fontSize: "18px",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            padding: 0, transition: "all 0.15s ease",
-                          }}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
+                    <EmojiPicker selected={editForm.icon} onSelect={(emoji) => setEditForm((f) => ({ ...f, icon: emoji }))} />
                   </Field>
                   <Field label="Couleur">
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px", marginBottom: "12px" }}>
-                      {COLOR_PALETTE.map((c) => (
-                        <button
-                          key={c}
-                          onClick={() => setEditForm((f) => ({ ...f, color: c }))}
-                          style={{
-                            width: "22px", height: "22px", borderRadius: "50%", background: c,
-                            border: editForm.color === c ? "2px solid var(--text)" : "2px solid transparent",
-                            cursor: "pointer", padding: 0, flexShrink: 0, transition: "border-color 0.15s ease",
-                          }}
-                        />
-                      ))}
-                    </div>
+                    <ColorPicker selected={editForm.color} onSelect={(c) => setEditForm((f) => ({ ...f, color: c }))} />
                   </Field>
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => saveEdit(cat.key)}
                       disabled={!editForm.label?.trim()}
+                      className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg border-none font-semibold transition-all duration-200"
                       style={{
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", letterSpacing: "1px",
-                        textTransform: "uppercase", padding: "8px 16px", borderRadius: "8px",
                         cursor: editForm.label?.trim() ? "pointer" : "not-allowed",
                         background: editForm.label?.trim() ? "var(--gold)" : "var(--border-2)",
-                        border: "none", color: editForm.label?.trim() ? "#020d0d" : "var(--text-faint)", fontWeight: 600,
+                        color: editForm.label?.trim() ? "#020d0d" : "var(--text-faint)",
                       }}
                     >
                       Enregistrer
                     </button>
                     <button
                       onClick={cancelEdit}
-                      style={{
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", letterSpacing: "1px",
-                        textTransform: "uppercase", padding: "8px 14px", borderRadius: "8px",
-                        cursor: "pointer", background: "transparent", border: "1px solid var(--border-2)", color: "var(--text-faint)",
-                      }}
+                      className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
                     >
                       Annuler
                     </button>
@@ -489,46 +319,31 @@ function CategoriesSection() {
                 </div>
               )}
 
-              {/* ── Confirmation panel ── */}
+              {/* Delete confirmation panel */}
               {isPending && (
-                <div
-                  style={{
-                    background: "var(--bg)",
-                    border: "1px solid var(--red)",
-                    borderTop: "none",
-                    borderRadius: "0 0 10px 10px",
-                    padding: "12px 14px",
-                  }}
-                >
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", color: "var(--red)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>
+                <div className="bg-bg border border-red border-t-0 rounded-[0_0_10px_10px] px-3.5 py-3">
+                  <div className="font-plex text-[9px] text-red tracking-[1px] uppercase mb-2">
                     {affected.length} abonnement{affected.length > 1 ? "s" : ""} sera{affected.length > 1 ? "ont" : ""} supprimé{affected.length > 1 ? "s" : ""}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "12px" }}>
+                  <div className="flex flex-col gap-1 mb-3">
                     {affected.map((s) => (
-                      <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "12px" }}>{s.icon}</span>
-                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", color: "var(--text-muted)" }}>{s.name}</span>
+                      <div key={s.id} className="flex items-center gap-2">
+                        <span className="text-xs">{s.icon}</span>
+                        <span className="font-plex text-[9px] text-text-muted">{s.name}</span>
                       </div>
                     ))}
                   </div>
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => confirmDelete(cat.key)}
-                      style={{
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", letterSpacing: "1px",
-                        textTransform: "uppercase", padding: "7px 14px", borderRadius: "7px",
-                        cursor: "pointer", background: "var(--red)", border: "none", color: "#fff", fontWeight: 600,
-                      }}
+                      className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-[7px] rounded-[7px] cursor-pointer bg-red border-none font-semibold"
+                      style={{ color: "#fff" }}
                     >
                       Supprimer tout
                     </button>
                     <button
                       onClick={() => setPendingDelete(null)}
-                      style={{
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", letterSpacing: "1px",
-                        textTransform: "uppercase", padding: "7px 14px", borderRadius: "7px",
-                        cursor: "pointer", background: "transparent", border: "1px solid var(--border-2)", color: "var(--text-faint)",
-                      }}
+                      className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-[7px] rounded-[7px] cursor-pointer bg-transparent border border-border-2 text-text-faint"
                     >
                       Annuler
                     </button>
@@ -540,132 +355,39 @@ function CategoriesSection() {
         })}
       </div>
 
-      {/* Add form */}
+      {/* Add form / trigger */}
       {open ? (
-        <div
-          style={{
-            padding: "14px",
-            background: "var(--bg)",
-            border: "1px solid var(--border)",
-            borderRadius: "10px",
-          }}
-        >
+        <div className="p-3.5 bg-bg border border-border rounded-[10px]">
           <Field label="Nom">
             <input
               value={form.label}
               onChange={(e) => { setForm((f) => ({ ...f, label: e.target.value })); setError(""); }}
               placeholder="ex: Musique"
-              style={{ ...inputStyle, width: "100%", marginBottom: "10px" }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-2)")}
+              className={cn(inputCls, "mb-2.5")}
             />
           </Field>
-
           <Field label="Icône">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(13, 36px)",
-                gap: "6px",
-                marginTop: "6px",
-                marginBottom: "10px",
-              }}
-            >
-              {EMOJI_GRID.map((emoji) => (
-                <button
-                  key={emoji}
-                  onClick={() => { setForm((f) => ({ ...f, icon: emoji })); setError(""); }}
-                  style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "8px",
-                    border: form.icon === emoji
-                      ? "2px solid var(--gold)"
-                      : "1px solid var(--border-2)",
-                    background: form.icon === emoji ? "var(--gold-dim)" : "var(--bg-3)",
-                    cursor: "pointer",
-                    fontSize: "18px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 0,
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
+            <EmojiPicker selected={form.icon} onSelect={(emoji) => { setForm((f) => ({ ...f, icon: emoji })); setError(""); }} />
           </Field>
-
           <Field label="Couleur">
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
-              {COLOR_PALETTE.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setForm((f) => ({ ...f, color: c }))}
-                  style={{
-                    width: "22px",
-                    height: "22px",
-                    borderRadius: "50%",
-                    background: c,
-                    border: form.color === c ? "2px solid var(--text)" : "2px solid transparent",
-                    cursor: "pointer",
-                    padding: 0,
-                    flexShrink: 0,
-                    transition: "border-color 0.15s ease",
-                  }}
-                />
-              ))}
-            </div>
+            <ColorPicker selected={form.color} onSelect={(c) => setForm((f) => ({ ...f, color: c }))} />
           </Field>
 
           {error && (
-            <div
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: "9px",
-                color: "var(--red)",
-                marginTop: "8px",
-              }}
-            >
-              {error}
-            </div>
+            <div className="font-plex text-[9px] text-red mt-2">{error}</div>
           )}
 
-          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+          <div className="flex gap-2 mt-3">
             <button
               onClick={handleAdd}
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: "9px",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-                padding: "8px 16px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                background: "var(--gold)",
-                border: "none",
-                color: "#020d0d",
-                fontWeight: 600,
-              }}
+              className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg cursor-pointer bg-gold border-none font-semibold"
+              style={{ color: "#020d0d" }}
             >
               Ajouter
             </button>
             <button
               onClick={() => { setOpen(false); setForm(EMPTY_NEW); setError(""); }}
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: "9px",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                background: "transparent",
-                border: "1px solid var(--border-2)",
-                color: "var(--text-faint)",
-              }}
+              className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
             >
               Annuler
             </button>
@@ -674,32 +396,7 @@ function CategoriesSection() {
       ) : (
         <button
           onClick={() => setOpen(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            letterSpacing: "1px",
-            textTransform: "uppercase",
-            padding: "9px 16px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            background: "transparent",
-            border: "1px dashed var(--border)",
-            color: "var(--text-faint)",
-            transition: "all 0.2s ease",
-            width: "100%",
-            justifyContent: "center",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--gold)";
-            e.currentTarget.style.color = "var(--gold)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.color = "var(--text-faint)";
-          }}
+          className="flex items-center gap-2 font-plex text-[9px] tracking-[1px] uppercase px-4 py-[9px] rounded-lg cursor-pointer bg-transparent border border-dashed border-border text-text-faint hover:border-gold hover:text-gold transition-all duration-200 w-full justify-center"
         >
           + Nouvelle catégorie
         </button>
@@ -708,34 +405,14 @@ function CategoriesSection() {
   );
 }
 
-// ── PAGE ──────────────────────────────────────────────────────
 export function Parametres() {
-  const isWide = useWideLayout(768);
-
   return (
-    <div style={{ padding: isWide ? "16px" : "10px", overflowY: "auto" }}>
-      {/* Page header */}
-      <div style={{ marginBottom: "20px" }}>
-        <div
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "22px",
-            fontWeight: 700,
-            color: "var(--text)",
-            marginBottom: "4px",
-          }}
-        >
+    <div className="p-2.5 md:p-4 overflow-y-auto">
+      <div className="mb-5">
+        <div className="font-playfair text-[22px] font-bold text-text mb-1">
           Paramètres
         </div>
-        <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            letterSpacing: "1.5px",
-            textTransform: "uppercase",
-            color: "var(--text-faint)",
-          }}
-        >
+        <div className="font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">
           Préférences & configuration
         </div>
       </div>

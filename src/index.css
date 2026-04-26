@@ -1,9 +1,9 @@
-/* ============================================
-   SubDz — Design Tokens
-   Place this in: src/index.css
-   ============================================ */
-
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ── Dark Mode — Deep Teal ── */
 :root,
 .dark {
@@ -12,7 +12,7 @@
   --bg-3: #0a1f1f;
   --bg-4: #102a2a;
 
-  --gold: #2dd4bf; /* teal is the primary accent, gold name kept for compatibility */
+  --gold: #2dd4bf;
   --gold-2: #5eead4;
   --gold-dim: rgba(45, 212, 191, 0.12);
 
@@ -73,27 +73,10 @@
   --grid-line: rgba(13, 148, 136, 0.05);
 }
 
-/* ── Base Reset ── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  font-size: 16px;
-}
-
 body {
   font-family: "DM Mono", monospace;
   background: var(--bg);
   color: var(--text);
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease,
-    border-color 0.3s ease;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -135,7 +118,6 @@ body {
   transition-timing-function: ease;
 }
 
-/* Exception: disable transition on map tiles */
 .leaflet-tile,
 .leaflet-tile-container {
   transition: none !important;
@@ -154,47 +136,28 @@ body {
 }
 
 @keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
+
 @keyframes subdz-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
+
 .animate-fade-up {
   animation: fadeUp 0.5s ease forwards;
 }
 .dot-soon {
-  animation: pulse 1.5s ease infinite;
+  animation: subdz-pulse 1.5s ease infinite;
 }
 
-/* ── Scrollbar (dark mode) ── */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-2);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

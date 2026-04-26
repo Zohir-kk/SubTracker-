@@ -1,4 +1,3 @@
-// src/components/kpi/KPIRow.jsx
 import {
   useKPI,
   useMediaGrid,
@@ -7,88 +6,28 @@ import {
 } from "../../hooks/useSubscriptions.js";
 import { useStore } from "../../store/useStore.jsx";
 
-// BUG FIXED: removed local daysUntil, formatDZD, computeKPIs — now from hooks
-// BUG FIXED: useMediaGrid(4) — was useMediaGrid(undefined, 4) which is wrong
-
 function KPICard({ label, value, sub, accent, delta, deltaUp, compact }) {
   return (
-    <div
-      style={{
-        background: "var(--bg-2)",
-        border: "1px solid var(--border-2)",
-        borderRadius: "12px",
-        padding: "18px 20px 14px",
-        position: "relative",
-        overflow: "hidden",
-        cursor: "default",
-        transition: "border-color 0.2s ease, transform 0.2s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--border-2)";
-        e.currentTarget.style.transform = "translateY(0)";
-      }}
-    >
+    <div className="bg-bg-2 border border-border-2 rounded-xl px-5 pt-[18px] pb-3.5 relative overflow-hidden cursor-default hover:border-border hover:-translate-y-0.5 transition-[border-color,transform] duration-200">
+      {/* Corner accent blob */}
       <div
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          width: "80px",
-          height: "80px",
-          borderRadius: "0 12px 0 80px",
-          background: accent,
-          opacity: 0.08,
-          pointerEvents: "none",
-        }}
+        className="absolute top-0 right-0 w-20 h-20 rounded-[0_12px_0_80px] pointer-events-none opacity-[0.08]"
+        style={{ background: accent }}
       />
-      <div
-        style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: "9px",
-          letterSpacing: "2px",
-          textTransform: "uppercase",
-          color: "var(--text-faint)",
-          marginBottom: "10px",
-        }}
-      >
+      <div className="font-plex text-[9px] tracking-[2px] uppercase text-text-faint mb-2.5">
         {label}
       </div>
       <div
-        style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: compact ? "22px" : "30px",
-          fontWeight: 700,
-          color: "var(--text)",
-          lineHeight: 1,
-          marginBottom: "4px",
-        }}
+        className={`font-playfair font-bold text-text leading-none mb-1 ${compact ? "text-[22px]" : "text-3xl"}`}
       >
         {value}
       </div>
       {sub && (
-        <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            color: "var(--text-faint)",
-            marginBottom: "8px",
-          }}
-        >
-          {sub}
-        </div>
+        <div className="font-plex text-[9px] text-text-faint mb-2">{sub}</div>
       )}
       {delta && (
         <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "10px",
-            color: deltaUp ? "var(--red)" : "var(--green)",
-            marginTop: "6px",
-          }}
+          className={`font-plex text-[10px] mt-1.5 ${deltaUp ? "text-red" : "text-green"}`}
         >
           {delta}
         </div>
@@ -115,7 +54,7 @@ export function KPIRow() {
     {
       label: "Abonnements actifs",
       value: activeCount,
-      sub: `sur ${subscriptions.length} au total`, // BUG FIXED: subscriptions now imported
+      sub: `sur ${subscriptions.length} au total`,
       accent: "var(--teal)",
       delta: "— stable ce mois",
       deltaUp: false,
@@ -146,13 +85,8 @@ export function KPIRow() {
 
   return (
     <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-        gap: "14px",
-        padding: "0 0 16px",
-        margin: "0 0 20px",
-      }}
+      className="grid gap-[14px] pb-4 mb-5"
+      style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
     >
       {cards.map((card) => (
         <KPICard key={card.label} {...card} compact={!isWide} />

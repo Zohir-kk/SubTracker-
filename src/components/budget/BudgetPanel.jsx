@@ -1,4 +1,3 @@
-// src/components/budget/BudgetPanel.jsx
 import { useEffect, useRef, useState } from "react";
 import { formatDZD, useWideLayout, computeSpendPerCategory } from "../../hooks/useSubscriptions.js";
 import { useStore } from "../../store/useStore.jsx";
@@ -9,104 +8,39 @@ function BudgetBar({ category, used, limit, animate, onEditLimit }) {
   const barColor = isOverspend ? "var(--red)" : category.color;
 
   return (
-    <div style={{ marginBottom: "18px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "7px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div className="mb-[18px]">
+      <div className="flex justify-between items-center mb-[7px]">
+        <div className="flex items-center gap-2">
           <div
-            style={{
-              width: "26px",
-              height: "26px",
-              borderRadius: "6px",
-              background: `${category.color}18`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "12px",
-            }}
+            className="w-[26px] h-[26px] rounded-md flex items-center justify-center text-xs shrink-0"
+            style={{ background: `${category.color}18` }}
           >
             {category.icon}
           </div>
-          <span
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: "10px",
-              color: "var(--text)",
-            }}
-          >
-            {category.label}
-          </span>
+          <span className="font-plex text-[10px] text-text">{category.label}</span>
         </div>
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            color: isOverspend ? "var(--red)" : "var(--text-faint)",
-          }}
+          className={`flex items-center gap-1.5 font-plex text-[9px] ${isOverspend ? "text-red" : "text-text-faint"}`}
         >
           {formatDZD(used)}{" "}
-          <span style={{ color: "var(--text-faint)" }}>
-            / {formatDZD(limit)}
-          </span>
+          <span className="text-text-faint">/ {formatDZD(limit)}</span>
           <button
             onClick={onEditLimit}
             title="Modifier le budget"
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--text-faint)",
-              padding: "1px 3px",
-              borderRadius: "3px",
-              fontSize: "10px",
-              lineHeight: 1,
-              opacity: 0.6,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+            className="bg-transparent border-none cursor-pointer text-text-faint px-[3px] py-px rounded-[3px] text-[10px] leading-none opacity-60 hover:opacity-100"
           >
             ✎
           </button>
         </div>
       </div>
-      <div
-        style={{
-          height: "4px",
-          background: "var(--border-2)",
-          borderRadius: "2px",
-          overflow: "hidden",
-        }}
-      >
+      <div className="h-1 bg-border-2 rounded-sm overflow-hidden">
         <div
-          style={{
-            height: "100%",
-            width: animate ? `${percent}%` : "0%",
-            background: barColor,
-            borderRadius: "2px",
-            transition: "width 0.9s cubic-bezier(0.23,1,0.32,1)",
-          }}
+          className="h-full rounded-sm transition-[width] duration-[900ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+          style={{ width: animate ? `${percent}%` : "0%", background: barColor }}
         />
       </div>
       {isOverspend && (
-        <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "8px",
-            color: "var(--red)",
-            marginTop: "4px",
-          }}
-        >
-          ● Budget dépassé
-        </div>
+        <div className="font-plex text-[8px] text-red mt-1">● Budget dépassé</div>
       )}
     </div>
   );
@@ -114,48 +48,18 @@ function BudgetBar({ category, used, limit, animate, onEditLimit }) {
 
 function StatCard({ label, value, sub, color }) {
   return (
-    <div
-      style={{
-        background: "var(--bg-3)",
-        border: "1px solid var(--border-2)",
-        borderRadius: "10px",
-        padding: "14px",
-      }}
-    >
-      <div
-        style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: "8px",
-          letterSpacing: "1.5px",
-          textTransform: "uppercase",
-          color: "var(--text-faint)",
-          marginBottom: "8px",
-        }}
-      >
+    <div className="bg-bg-3 border border-border-2 rounded-[10px] p-3.5">
+      <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-text-faint mb-2">
         {label}
       </div>
       <div
-        style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: "22px",
-          fontWeight: 700,
-          color: color || "var(--text)",
-          lineHeight: 1,
-          marginBottom: "2px",
-        }}
+        className="font-playfair text-[22px] font-bold leading-none mb-0.5"
+        style={{ color: color || "var(--text)" }}
       >
         {value}
       </div>
       {sub && (
-        <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "8px",
-            color: "var(--text-faint)",
-          }}
-        >
-          {sub}
-        </div>
+        <div className="font-plex text-[8px] text-text-faint">{sub}</div>
       )}
     </div>
   );
@@ -169,8 +73,7 @@ export function BudgetPanel() {
   const savedAmount = subscriptions
     .filter((s) => s.status === "paused")
     .reduce((sum, s) => sum + s.amount, 0);
-  const usageRate =
-    totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
+  const usageRate = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
 
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
@@ -178,7 +81,6 @@ export function BudgetPanel() {
     return () => clearTimeout(timer);
   }, []);
 
-  // ── Inline budget editing ──
   const [editingKey, setEditingKey] = useState(null);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef(null);
@@ -186,7 +88,6 @@ export function BudgetPanel() {
   function startEdit(key, currentLimit) {
     setEditingKey(key);
     setEditValue(currentLimit > 0 ? String(currentLimit) : "");
-    // focus the input on next render
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
@@ -206,60 +107,20 @@ export function BudgetPanel() {
   const isWide = useWideLayout(768);
 
   return (
-    <div
-      style={{
-        background: "var(--bg-2)",
-        border: "1px solid var(--border-2)",
-        borderRadius: "14px",
-        padding: "18px",
-        marginBottom: "16px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          marginBottom: "20px",
-        }}
-      >
+    <div className="bg-bg-2 border border-border-2 rounded-[14px] p-[18px] mb-4">
+      <div className="flex items-center gap-2 mb-5">
+        <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+        <div className="font-playfair text-base font-semibold text-text">Budget mensuel</div>
         <div
-          style={{
-            width: "6px",
-            height: "6px",
-            borderRadius: "50%",
-            background: "var(--gold)",
-            flexShrink: 0,
-          }}
-        />
-        <div
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "16px",
-            fontWeight: 600,
-            color: "var(--text)",
-          }}
-        >
-          Budget mensuel
-        </div>
-        <div
-          style={{
-            marginLeft: "auto",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            color: usageRate >= 90 ? "var(--red)" : "var(--text-faint)",
-            letterSpacing: "1px",
-          }}
+          className={`ml-auto font-plex text-[9px] tracking-[1px] ${usageRate >= 90 ? "text-red" : "text-text-faint"}`}
         >
           {usageRate}% utilisé
         </div>
       </div>
+
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isWide ? "1fr 1fr" : "1fr",
-          gap: "24px",
-        }}
+        className="grid gap-6"
+        style={{ gridTemplateColumns: isWide ? "1fr 1fr" : "1fr" }}
       >
         <div>
           {CATEGORIES.map((cat) => (
@@ -272,20 +133,8 @@ export function BudgetPanel() {
                 onEditLimit={() => startEdit(cat.key, budgetLimits[cat.key] || 0)}
               />
               {editingKey === cat.key && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    marginTop: "-10px",
-                    marginBottom: "18px",
-                    padding: "8px 10px",
-                    background: "var(--bg-3)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", color: "var(--text-faint)", whiteSpace: "nowrap" }}>
+                <div className="flex items-center gap-2 -mt-2.5 mb-[18px] px-2.5 py-2 bg-bg-3 border border-border rounded-lg">
+                  <span className="font-plex text-[9px] text-text-faint whitespace-nowrap">
                     Budget {cat.label} :
                   </span>
                   <input
@@ -297,32 +146,13 @@ export function BudgetPanel() {
                     onBlur={commitEdit}
                     onKeyDown={handleEditKeyDown}
                     placeholder="0"
-                    style={{
-                      flex: 1,
-                      background: "var(--bg)",
-                      border: "1px solid var(--gold)",
-                      borderRadius: "6px",
-                      padding: "5px 8px",
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: "11px",
-                      color: "var(--text)",
-                      outline: "none",
-                    }}
+                    className="flex-1 bg-bg border border-gold rounded-md px-2 py-[5px] font-plex text-[11px] text-text outline-none"
                   />
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", color: "var(--text-faint)" }}>DZD</span>
+                  <span className="font-plex text-[9px] text-text-faint">DZD</span>
                   <button
                     onClick={commitEdit}
-                    style={{
-                      background: "var(--gold)",
-                      border: "none",
-                      borderRadius: "5px",
-                      padding: "4px 10px",
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: "9px",
-                      fontWeight: 600,
-                      color: "#020d0d",
-                      cursor: "pointer",
-                    }}
+                    className="bg-gold border-none rounded-[5px] px-2.5 py-1 font-plex text-[9px] font-semibold cursor-pointer"
+                    style={{ color: "#020d0d" }}
                   >
                     OK
                   </button>
@@ -331,32 +161,11 @@ export function BudgetPanel() {
             </div>
           ))}
         </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isWide ? "1fr 1fr" : "1fr 1fr",
-            gap: "10px",
-            alignContent: "start",
-          }}
-        >
-          <StatCard
-            label="Total dépensé"
-            value={formatDZD(totalSpent)}
-            sub="DZD ce mois"
-            color="var(--text)"
-          />
-          <StatCard
-            label="Budget total"
-            value={formatDZD(totalBudget)}
-            sub="DZD alloué"
-            color="var(--text)"
-          />
-          <StatCard
-            label="Économies"
-            value={formatDZD(savedAmount)}
-            sub="DZD en pause"
-            color="var(--green)"
-          />
+
+        <div className="grid grid-cols-2 gap-2.5 content-start">
+          <StatCard label="Total dépensé" value={formatDZD(totalSpent)} sub="DZD ce mois" color="var(--text)" />
+          <StatCard label="Budget total" value={formatDZD(totalBudget)} sub="DZD alloué" color="var(--text)" />
+          <StatCard label="Économies" value={formatDZD(savedAmount)} sub="DZD en pause" color="var(--green)" />
           <StatCard
             label="Taux utilisation"
             value={`${usageRate}%`}

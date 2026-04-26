@@ -1,12 +1,9 @@
-// src/components/insight/InsightCard.jsx
 import { useStore } from "../../store/useStore.jsx";
 import { formatDZD } from "../../hooks/useSubscriptions.js";
 
-
 function computeInsight(subscriptions) {
   const vodSubs = subscriptions.filter(
-    (s) =>
-      s.category === "vod" && (s.status === "active" || s.status === "trial"),
+    (s) => s.category === "vod" && (s.status === "active" || s.status === "trial"),
   );
   if (vodSubs.length >= 2) {
     const sorted = [...vodSubs].sort((a, b) => a.amount - b.amount);
@@ -33,8 +30,7 @@ function computeInsight(subscriptions) {
   }
   return {
     title: "Conseil du mois",
-    before:
-      "Tous tes abonnements semblent optimisés. Pense à vérifier tes offres ",
+    before: "Tous tes abonnements semblent optimisés. Pense à vérifier tes offres ",
     amount: null,
     after: "annuelles pour réduire tes coûts jusqu'à 20%.",
     cta: "Voir les offres →",
@@ -44,60 +40,22 @@ function computeInsight(subscriptions) {
 export function InsightCard() {
   const { subscriptions } = useStore();
   const insight = computeInsight(subscriptions);
+
   return (
-    <div
-      style={{
-        background: "var(--bg-3)",
-        border: "1px solid var(--border)",
-        borderRadius: "10px",
-        padding: "14px",
-        display: "flex",
-        gap: "10px",
-        alignItems: "flex-start",
-      }}
-    >
-      <div style={{ fontSize: "16px", flexShrink: 0, marginTop: "1px" }}>
-        💡
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "10px",
-            fontWeight: 500,
-            color: "var(--text)",
-            marginBottom: "5px",
-          }}
-        >
+    <div className="bg-bg-3 border border-border rounded-[10px] p-3.5 flex gap-2.5 items-start">
+      <div className="text-base shrink-0 mt-px">💡</div>
+      <div className="flex-1 min-w-0">
+        <div className="font-plex text-[10px] font-medium text-text mb-[5px]">
           {insight.title}
         </div>
-        <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            color: "var(--text-muted)",
-            lineHeight: 1.7,
-            overflowWrap: "break-word",
-          }}
-        >
+        <div className="font-plex text-[9px] text-text-muted leading-[1.7] break-words">
           {insight.before}
           {insight.amount && (
-            <span style={{ color: "var(--gold)", fontWeight: 500 }}>
-              {formatDZD(insight.amount)}
-            </span>
+            <span className="text-gold font-medium">{formatDZD(insight.amount)}</span>
           )}
           {insight.after}
         </div>
-        {/* BUG FIXED: var(--text2) doesn't exist in tokens — changed to var(--text-muted) */}
-        <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            color: "var(--gold)",
-            marginTop: "8px",
-            cursor: "pointer",
-          }}
-        >
+        <div className="font-plex text-[9px] text-gold mt-2 cursor-pointer">
           {insight.cta}
         </div>
       </div>

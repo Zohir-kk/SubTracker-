@@ -1,5 +1,3 @@
-// src/components/layout/AppHeader.jsx
-
 import { Sun, Moon, Menu, Bell } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
@@ -7,49 +5,20 @@ import { useStore } from "../../store/useStore.jsx";
 import { ProfileModal } from "../settings/ProfileModal.jsx";
 import { useWideLayout, daysUntil, formatDZD } from "../../hooks/useSubscriptions.js";
 
-// ── Logo ──────────────────────────────
 function Logo() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-      {/* Diamond — SVG for reliable cross-browser rendering */}
-      <svg width="28" height="28" viewBox="0 0 28 28" style={{ flexShrink: 0 }}>
+    <div className="flex items-center gap-3">
+      <svg width="28" height="28" viewBox="0 0 28 28" className="shrink-0">
         <polygon points="14,1 27,14 14,27 1,14" fill="var(--gold)" />
-        <text
-          x="14"
-          y="19"
-          textAnchor="middle"
-          fontFamily="Georgia, serif"
-          fontSize="11"
-          fontWeight="700"
-          fill="#080c14"
-        >
+        <text x="14" y="19" textAnchor="middle" fontFamily="Georgia, serif" fontSize="11" fontWeight="700" fill="#080c14">
           S
         </text>
       </svg>
-
       <div>
-        <div
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "20px",
-            fontWeight: 700,
-            color: "var(--text)",
-            letterSpacing: "1px",
-            lineHeight: 1,
-          }}
-        >
+        <div className="font-playfair text-xl font-bold text-text tracking-[1px] leading-none">
           SubDz
         </div>
-        <div
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "8px",
-            color: "var(--text-faint)",
-            letterSpacing: "2px",
-            textTransform: "uppercase",
-            marginTop: "3px",
-          }}
-        >
+        <div className="font-plex text-[8px] text-text-faint tracking-[2px] uppercase mt-[3px]">
           Gestionnaire d'abonnements
         </div>
       </div>
@@ -57,52 +26,30 @@ function Logo() {
   );
 }
 
-// ── Month Badge ────────────────────────
 function MonthBadge() {
   const now = new Date();
-  const label = now.toLocaleDateString("fr-DZ", {
-    month: "long",
-    year: "numeric",
-  });
+  const label = now.toLocaleDateString("fr-DZ", { month: "long", year: "numeric" });
   const formatted = label.charAt(0).toUpperCase() + label.slice(1);
 
   return (
-    <div
-      style={{
-        fontFamily: "'IBM Plex Mono', monospace",
-        fontSize: "10px",
-        letterSpacing: "1.5px",
-        textTransform: "uppercase",
-        border: "1px solid var(--border)",
-        color: "var(--gold)",
-        padding: "5px 12px",
-        borderRadius: "20px",
-        whiteSpace: "nowrap",
-      }}
-    >
+    <div className="font-plex text-[10px] tracking-[1.5px] uppercase border border-border text-gold px-3 py-[5px] rounded-[20px] whitespace-nowrap">
       {formatted}
     </div>
   );
 }
 
-// ── Theme Toggle ───────────────────────
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
-  if (!mounted) return <div style={{ width: "80px" }} />;
+  if (!mounted) return <div className="w-20" />;
 
   const isDark = theme === "dark";
 
   return (
     <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        cursor: "pointer",
-      }}
+      className="flex items-center gap-2 cursor-pointer"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       role="switch"
       aria-checked={isDark}
@@ -110,80 +57,40 @@ function ThemeToggle() {
     >
       <Sun
         size={14}
-        style={{
-          opacity: isDark ? 0.3 : 1,
-          color: "var(--gold)",
-          transition: "opacity 0.2s ease",
-        }}
+        className="text-gold transition-opacity duration-200"
+        style={{ opacity: isDark ? 0.3 : 1 }}
       />
-
-      <div
-        style={{
-          width: "42px",
-          height: "24px",
-          borderRadius: "12px",
-          border: "1px solid var(--border)",
-          backgroundColor: "var(--gold-dim)",
-          position: "relative",
-        }}
-      >
-        {/* Thumb — hardcoded hex so it always shows correctly */}
+      <div className="w-[42px] h-6 rounded-xl border border-border bg-gold-dim relative">
         <div
+          className="w-[18px] h-[18px] rounded-full absolute top-[2px] left-[2px] transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
           style={{
-            width: "18px",
-            height: "18px",
-            borderRadius: "50%",
             backgroundColor: isDark ? "#2dd4bf" : "#0d9488",
-            position: "absolute",
-            top: "2px",
-            left: "2px",
             transform: isDark ? "translateX(18px)" : "translateX(0px)",
-            transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         />
       </div>
-
       <Moon
         size={14}
-        style={{
-          opacity: isDark ? 1 : 0.3,
-          color: "var(--gold)",
-          transition: "opacity 0.2s ease",
-        }}
+        className="text-gold transition-opacity duration-200"
+        style={{ opacity: isDark ? 1 : 0.3 }}
       />
     </div>
   );
 }
 
-// ── User Avatar ────────────────────────
 function UserAvatar({ initials = "AK", onClick }) {
   return (
     <div
       onClick={onClick}
       title="Modifier le profil"
-      style={{
-        width: "34px",
-        height: "34px",
-        minWidth: "34px",
-        borderRadius: "50%",
-        backgroundColor: "var(--gold)",
-        color: "#080c14",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'IBM Plex Mono', monospace",
-        fontSize: "11px",
-        fontWeight: 500,
-        cursor: "pointer",
-        userSelect: "none",
-      }}
+      className="w-[34px] h-[34px] min-w-[34px] rounded-full bg-gold flex items-center justify-center font-plex text-[11px] font-medium cursor-pointer select-none"
+      style={{ color: "#080c14" }}
     >
       {initials}
     </div>
   );
 }
 
-// ── Notification Bell ──────────────────
 function NotificationBell() {
   const { subscriptions, categories } = useStore();
   const [open, setOpen] = useState(false);
@@ -195,7 +102,6 @@ function NotificationBell() {
     .filter((s) => s.days <= 3)
     .sort((a, b) => a.days - b.days);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     function handleClick(e) {
@@ -206,77 +112,34 @@ function NotificationBell() {
   }, [open]);
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        style={{
-          position: "relative",
-          background: open ? "var(--bg-3)" : "transparent",
-          border: "1px solid var(--border-2)",
-          borderRadius: "8px",
-          padding: "6px",
-          cursor: "pointer",
-          color: urgent.length > 0 ? "var(--red)" : "var(--text-faint)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "all 0.2s ease",
-        }}
+        className={`relative border border-border-2 rounded-lg p-1.5 cursor-pointer flex items-center justify-center transition-all duration-200 ${
+          open ? "bg-bg-3" : "bg-transparent"
+        } ${urgent.length > 0 ? "text-red" : "text-text-faint"}`}
         title="Notifications de renouvellement"
       >
         <Bell size={16} />
         {urgent.length > 0 && (
-          <div style={{
-            position: "absolute",
-            top: "-5px",
-            right: "-5px",
-            width: "16px",
-            height: "16px",
-            borderRadius: "50%",
-            background: "var(--red)",
-            color: "#fff",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "9px",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "2px solid var(--bg)",
-          }}>
+          <div className="absolute -top-[5px] -right-[5px] w-4 h-4 rounded-full bg-red font-plex text-[9px] font-semibold flex items-center justify-center border-2 border-bg"
+            style={{ color: "#fff" }}>
             {urgent.length}
           </div>
         )}
       </button>
 
       {open && (
-        <div style={{
-          position: "absolute",
-          top: "calc(100% + 8px)",
-          right: 0,
-          width: "280px",
-          background: "var(--bg-2)",
-          border: "1px solid var(--border)",
-          borderRadius: "12px",
-          boxShadow: "var(--shadow-card)",
-          zIndex: 500,
-          overflow: "hidden",
-        }}>
-          {/* Header */}
-          <div style={{
-            padding: "12px 14px",
-            borderBottom: "1px solid var(--border-2)",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}>
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--red)", flexShrink: 0 }} />
-            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>
+        <div className="absolute top-[calc(100%+8px)] right-0 w-[280px] bg-bg-2 border border-border rounded-xl shadow-card z-[500] overflow-hidden">
+          <div className="px-3.5 py-3 border-b border-border-2 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-red shrink-0" />
+            <span className="font-playfair text-sm font-semibold text-text">
               Renouvellements proches
             </span>
           </div>
 
           {urgent.length === 0 ? (
-            <div style={{ padding: "16px 14px", fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--text-faint)", textAlign: "center" }}>
+            <div className="px-3.5 py-4 font-plex text-[10px] text-text-faint text-center">
               Aucun renouvellement dans 3 jours
             </div>
           ) : (
@@ -284,33 +147,23 @@ function NotificationBell() {
               {urgent.map((s) => {
                 const cat = categories.find((c) => c.key === s.category);
                 return (
-                  <div key={s.id} style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    padding: "10px 14px",
-                    borderBottom: "1px solid var(--border-2)",
-                  }}>
-                    {/* Icon */}
-                    <div style={{
-                      width: "30px", height: "30px", borderRadius: "7px",
-                      background: `${cat?.color ?? "var(--teal)"}18`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "14px", flexShrink: 0,
-                    }}>
+                  <div key={s.id} className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-border-2">
+                    <div
+                      className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-sm shrink-0"
+                      style={{ background: `${cat?.color ?? "var(--teal)"}18` }}
+                    >
                       {s.icon}
                     </div>
-                    {/* Name + days */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {s.name}
-                      </div>
-                      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", color: s.days === 0 ? "var(--red)" : "var(--text-faint)", letterSpacing: "1px", marginTop: "2px" }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-plex text-[10px] text-text truncate">{s.name}</div>
+                      <div
+                        className="font-plex text-[8px] tracking-[1px] mt-0.5"
+                        style={{ color: s.days === 0 ? "var(--red)" : "var(--text-faint)" }}
+                      >
                         {s.days === 0 ? "Aujourd'hui" : s.days === 1 ? "Demain" : `Dans ${s.days} jours`}
                       </div>
                     </div>
-                    {/* Amount */}
-                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--red)", fontWeight: 600, flexShrink: 0 }}>
+                    <div className="font-plex text-[10px] text-red font-semibold shrink-0">
                       {formatDZD(s.amount)} DZD
                     </div>
                   </div>
@@ -324,7 +177,6 @@ function NotificationBell() {
   );
 }
 
-// ── AppHeader ──────────────────────────
 export function AppHeader({ onMenuClick }) {
   const { profile } = useStore();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -332,39 +184,11 @@ export function AppHeader({ onMenuClick }) {
 
   return (
     <>
-      <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          height: "68px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 16px",
-          backgroundColor: "var(--bg)",
-          borderBottom: "1px solid var(--border2)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          gap: "12px",
-        }}
-      >
-        {/* Hamburger — only shown on mobile */}
+      <header className="sticky top-0 z-[100] h-[68px] flex items-center justify-between px-4 bg-bg border-b border-border-2 backdrop-blur-md gap-3">
         {!isDesktop && (
           <button
             onClick={onMenuClick}
-            style={{
-              background: "transparent",
-              border: "1px solid var(--border-2)",
-              borderRadius: "8px",
-              padding: "6px",
-              cursor: "pointer",
-              color: "var(--text-faint)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
+            className="bg-transparent border border-border-2 rounded-lg p-1.5 cursor-pointer text-text-faint flex items-center justify-center shrink-0"
           >
             <Menu size={18} />
           </button>
@@ -372,8 +196,7 @@ export function AppHeader({ onMenuClick }) {
 
         <Logo />
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "auto" }}>
-          {/* Month badge hidden on mobile — saves space */}
+        <div className="flex items-center gap-3 ml-auto">
           {isDesktop && <MonthBadge />}
           <NotificationBell />
           <ThemeToggle />
