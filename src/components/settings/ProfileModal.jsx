@@ -1,9 +1,3 @@
-// src/components/settings/ProfileModal.jsx
-// ─────────────────────────────────────────────────────────────
-// Small modal for editing the user's display name and initials.
-// Triggered by clicking the avatar in AppHeader.
-// ─────────────────────────────────────────────────────────────
-
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "../../store/useStore.jsx";
@@ -33,89 +27,50 @@ export function ProfileModal({ isOpen, onClose }) {
     if (e.target === e.currentTarget) onClose();
   }
 
-  const inputStyle = {
-    width: "100%",
-    background: "var(--bg)",
-    border: "1px solid var(--border-2)",
-    borderRadius: "8px",
-    padding: "9px 12px",
-    fontFamily: "'IBM Plex Mono', monospace",
-    fontSize: "11px",
-    color: "var(--text)",
-    outline: "none",
-    boxSizing: "border-box",
-  };
-
   return createPortal(
     <div
       onClick={handleBackdrop}
-      style={{
-        position: "fixed",
-        top: 0, left: 0, right: 0, bottom: 0,
-        background: "rgba(0,0,0,0.55)",
-        backdropFilter: "blur(4px)",
-        WebkitBackdropFilter: "blur(4px)",
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px",
-      }}
+      className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[1000] flex items-center justify-center p-4"
     >
-      <div
-        style={{
-          background: "var(--bg-2)",
-          border: "1px solid var(--border)",
-          borderRadius: "16px",
-          padding: "24px",
-          width: "100%",
-          maxWidth: "340px",
-        }}
-      >
+      <div className="bg-bg-2 border border-border rounded-2xl p-6 w-full max-w-[340px]">
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--gold)", flexShrink: 0 }} />
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "17px", fontWeight: 600, color: "var(--text)" }}>
+        <div className="flex items-center gap-2.5 mb-6">
+          <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+          <div className="font-playfair text-[17px] font-semibold text-text">
             Profil utilisateur
           </div>
           <button
             onClick={onClose}
-            style={{ marginLeft: "auto", background: "transparent", border: "none", cursor: "pointer", color: "var(--text-faint)", fontSize: "20px", lineHeight: 1, padding: "2px 6px" }}
+            className="ml-auto bg-transparent border-none cursor-pointer text-text-faint text-xl leading-none px-1.5 py-0.5"
           >
             ×
           </button>
         </div>
 
         {/* Avatar preview */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
-          <div style={{
-            width: "56px", height: "56px", borderRadius: "50%",
-            background: "var(--gold)", color: "#020d0d",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: "16px", fontWeight: 600,
-          }}>
+        <div className="flex justify-center mb-5">
+          <div className="w-14 h-14 rounded-full bg-gold flex items-center justify-center font-plex text-base font-semibold"
+            style={{ color: "#020d0d" }}>
             {initials.trim().toUpperCase().slice(0, 3) || "?"}
           </div>
         </div>
 
         {/* Fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <div className="flex flex-col gap-3.5">
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", letterSpacing: "1.5px", textTransform: "uppercase", color: "var(--text-faint)", marginBottom: "5px" }}>
+            <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-text-faint mb-[5px]">
               Nom affiché
             </div>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="ex: Zohir K."
-              style={inputStyle}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-2)")}
+              className="w-full bg-bg border border-border-2 rounded-lg px-3 py-[9px] font-plex text-[11px] text-text outline-none focus:border-gold"
             />
           </div>
 
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", letterSpacing: "1.5px", textTransform: "uppercase", color: "var(--text-faint)", marginBottom: "5px" }}>
+            <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-text-faint mb-[5px]">
               Initiales (2–3 caractères)
             </div>
             <input
@@ -123,33 +78,25 @@ export function ProfileModal({ isOpen, onClose }) {
               onChange={(e) => setInitials(e.target.value.toUpperCase().slice(0, 3))}
               placeholder="ex: ZK"
               maxLength={3}
-              style={{ ...inputStyle, textTransform: "uppercase", letterSpacing: "3px" }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-2)")}
+              className="w-full bg-bg border border-border-2 rounded-lg px-3 py-[9px] font-plex text-[11px] text-text outline-none focus:border-gold uppercase tracking-[3px]"
             />
           </div>
         </div>
 
         {/* Actions */}
-        <div style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+        <div className="mt-5 flex gap-2.5 justify-end">
           <button
             onClick={onClose}
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", letterSpacing: "1px",
-              textTransform: "uppercase", padding: "8px 14px", borderRadius: "8px",
-              cursor: "pointer", background: "transparent", border: "1px solid var(--border-2)",
-              color: "var(--text-faint)",
-            }}
+            className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
           >
             Annuler
           </button>
           <button
             onClick={handleSave}
+            className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg cursor-pointer border-none font-semibold"
             style={{
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: "9px", letterSpacing: "1px",
-              textTransform: "uppercase", padding: "8px 16px", borderRadius: "8px",
-              cursor: "pointer", background: name.trim() ? "var(--gold)" : "var(--border-2)",
-              border: "none", color: "#020d0d", fontWeight: 600,
+              background: name.trim() ? "var(--gold)" : "var(--border-2)",
+              color: "#020d0d",
             }}
           >
             Enregistrer

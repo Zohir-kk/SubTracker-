@@ -1,16 +1,7 @@
-// src/components/subscription/SubscriptionModal.jsx
-// ─────────────────────────────────────────────────────────────
-// Single modal for adding and editing subscriptions.
-//
-// Add mode:  <SubscriptionModal isOpen sub={null} onClose={...} />
-// Edit mode: <SubscriptionModal isOpen sub={existingSub} onClose={...} />
-//
-// Calls useStore() directly — no callbacks needed from parent.
-// ─────────────────────────────────────────────────────────────
-
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "../../store/useStore.jsx";
+import { cn } from "../../lib/utils.js";
 
 const NEW_CAT_KEY = "__new__";
 
@@ -35,106 +26,69 @@ const EMPTY_FORM = {
   startDate: "",
 };
 
-// ── SHARED INPUT STYLES ───────────────────────────────────────
-const inputBase = {
-  width: "100%",
-  background: "var(--bg)",
-  borderRadius: "8px",
-  padding: "9px 12px",
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: "11px",
-  color: "var(--text)",
-  outline: "none",
-  boxSizing: "border-box",
-  transition: "border-color 0.2s ease",
-};
+const inputBase = "w-full bg-bg rounded-lg px-3 py-[9px] font-plex text-[11px] text-text outline-none border transition-colors duration-200";
 
-// ── FIELD ─────────────────────────────────────────────────────
-// Label + input slot. Shows error inline in the label.
 function Field({ label, error, children }) {
   return (
     <div>
       <div
-        style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: "8px",
-          letterSpacing: "1.5px",
-          textTransform: "uppercase",
-          color: error ? "var(--red)" : "var(--text-faint)",
-          marginBottom: "5px",
-        }}
+        className={cn(
+          "font-plex text-[8px] tracking-[1.5px] uppercase mb-[5px]",
+          error ? "text-red" : "text-text-faint",
+        )}
       >
         {label}
-        {error && (
-          <span style={{ marginLeft: "6px", fontStyle: "italic" }}>
-            — {error}
-          </span>
-        )}
+        {error && <span className="ml-1.5 italic">— {error}</span>}
       </div>
       {children}
     </div>
   );
 }
 
-// ── FORM INPUT ────────────────────────────────────────────────
-function FormInput({ error, ...props }) {
-  const [focused, setFocused] = useState(false);
+function FormInput({ error, className, ...props }) {
   return (
     <input
       {...props}
-      style={{
-        ...inputBase,
-        border: `1px solid ${error ? "var(--red)" : focused ? "var(--gold)" : "var(--border-2)"}`,
-      }}
-      onFocus={(e) => { setFocused(true); props.onFocus?.(e); }}
-      onBlur={(e)  => { setFocused(false); props.onBlur?.(e); }}
+      className={cn(
+        inputBase,
+        error ? "border-red" : "border-border-2 focus:border-gold",
+        className,
+      )}
     />
   );
 }
 
-// ── FORM SELECT ───────────────────────────────────────────────
-function FormSelect({ children, ...props }) {
-  const [focused, setFocused] = useState(false);
+function FormSelect({ children, className, ...props }) {
   return (
     <select
       {...props}
+      className={cn(
+        inputBase,
+        "border-border-2 focus:border-gold cursor-pointer appearance-none pr-8",
+        className,
+      )}
       style={{
-        ...inputBase,
-        border: `1px solid ${focused ? "var(--gold)" : "var(--border-2)"}`,
-        cursor: "pointer",
-        appearance: "none",
-        WebkitAppearance: "none",
         backgroundImage:
           "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 10px center",
-        paddingRight: "32px",
       }}
-      onFocus={(e) => { setFocused(true); props.onFocus?.(e); }}
-      onBlur={(e)  => { setFocused(false); props.onBlur?.(e); }}
     >
       {children}
     </select>
   );
 }
 
-// ── SUBSCRIPTION MODAL (MAIN EXPORT) ─────────────────────────
 export function SubscriptionModal({ isOpen, sub, onClose }) {
   const { subscriptions, add, update, remove, categories, addCategory, updateCategory, removeCategory } = useStore();
   const [form, setForm] = useState(EMPTY_FORM);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errors, setErrors] = useState({});
-
-  // ── Manage-categories panel ──
   const [showManageCats, setShowManageCats] = useState(false);
-
-  // ── New-category inline form ──
   const [showNewCat, setShowNewCat] = useState(false);
   const [newCatLabel, setNewCatLabel] = useState("");
   const [newCatIcon, setNewCatIcon] = useState("⭐");
   const [newCatColor, setNewCatColor] = useState(COLOR_PALETTE[0]);
-
-  // ── Edit-category inline form ──
   const [editCatKey, setEditCatKey] = useState(null);
   const [editCatLabel, setEditCatLabel] = useState("");
   const [editCatIcon, setEditCatIcon] = useState("");
@@ -142,7 +96,6 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
 
   const isEdit = Boolean(sub);
 
-  // Reset form each time the modal opens or target sub changes
   useEffect(() => {
     if (!isOpen) return;
     setForm(
@@ -156,10 +109,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
             status: sub.status,
             startDate: sub.startDate || "",
           }
-        : {
-            ...EMPTY_FORM,
-            startDate: new Date().toISOString().split("T")[0],
-          },
+        : { ...EMPTY_FORM, startDate: new Date().toISOString().split("T")[0] },
     );
     setConfirmDelete(false);
     setErrors({});
@@ -198,17 +148,13 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
     const amt = Number(form.amount);
     if (!form.amount || isNaN(amt) || amt <= 0) errs.amount = "invalide";
     const day = Number(form.renewalDay);
-    if (!form.renewalDay || isNaN(day) || day < 1 || day > 31)
-      errs.renewalDay = "doit être entre 1 et 31";
+    if (!form.renewalDay || isNaN(day) || day < 1 || day > 31) errs.renewalDay = "doit être entre 1 et 31";
     return errs;
   }
 
   function handleSave() {
     const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     const cat = categories.find((c) => c.key === form.category);
     const payload = {
       name: form.name.trim(),
@@ -220,11 +166,8 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
       status: form.status,
       startDate: form.startDate,
     };
-    if (isEdit && sub) {
-      update(sub.id, payload);
-    } else {
-      add(payload);
-    }
+    if (isEdit && sub) update(sub.id, payload);
+    else add(payload);
     onClose();
   }
 
@@ -234,21 +177,14 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
   }
 
   function handleCategoryChange(value) {
-    if (value === NEW_CAT_KEY) {
-      setShowNewCat(true);
-    } else {
-      setField("category", value);
-      setShowNewCat(false);
-    }
+    if (value === NEW_CAT_KEY) setShowNewCat(true);
+    else { setField("category", value); setShowNewCat(false); }
   }
 
   function handleCreateCategory() {
     const label = newCatLabel.trim();
     if (!label) return;
-    const key = label
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
+    const key = label.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     addCategory({ key, label, icon: newCatIcon, color: newCatColor });
     setField("category", key);
     setShowNewCat(false);
@@ -257,7 +193,6 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
     setNewCatColor(COLOR_PALETTE[0]);
   }
 
-  // Clicking the dark backdrop closes the modal
   function handleBackdrop(e) {
     if (e.target === e.currentTarget) onClose();
   }
@@ -265,82 +200,25 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
   return createPortal(
     <div
       onClick={handleBackdrop}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0,0,0,0.55)",
-        backdropFilter: "blur(4px)",
-        WebkitBackdropFilter: "blur(4px)",
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px",
-      }}
+      className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[1000] flex items-center justify-center p-4"
     >
-      <div
-        style={{
-          background: "var(--bg-2)",
-          border: "1px solid var(--border)",
-          borderRadius: "16px",
-          padding: "24px",
-          width: "100%",
-          maxWidth: "460px",
-          maxHeight: "90vh",
-          overflowY: "auto",
-        }}
-      >
-        {/* ── Header ── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            marginBottom: "24px",
-          }}
-        >
-          <div
-            style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: "var(--gold)",
-              flexShrink: 0,
-            }}
-          />
-          <div
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "17px",
-              fontWeight: 600,
-              color: "var(--text)",
-            }}
-          >
+      <div className="bg-bg-2 border border-border rounded-2xl p-6 w-full max-w-[460px] max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center gap-2.5 mb-6">
+          <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+          <div className="font-playfair text-[17px] font-semibold text-text">
             {isEdit ? "Modifier l'abonnement" : "Nouvel abonnement"}
           </div>
           <button
             onClick={onClose}
-            style={{
-              marginLeft: "auto",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--text-faint)",
-              fontSize: "20px",
-              lineHeight: 1,
-              padding: "2px 6px",
-              borderRadius: "4px",
-            }}
+            className="ml-auto bg-transparent border-none cursor-pointer text-text-faint text-xl leading-none px-1.5 py-0.5 rounded"
           >
             ×
           </button>
         </div>
 
-        {/* ── Form ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        {/* Form */}
+        <div className="flex flex-col gap-3.5">
           <Field label="Nom" error={errors.name}>
             <FormInput
               value={form.name}
@@ -358,28 +236,20 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
             />
           </Field>
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-          >
+          <div className="grid grid-cols-2 gap-3.5">
             <Field label="Catégorie">
               <FormSelect
                 value={showNewCat ? NEW_CAT_KEY : form.category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
               >
                 {categories.map((cat) => (
-                  <option key={cat.key} value={cat.key}>
-                    {cat.icon} {cat.label}
-                  </option>
+                  <option key={cat.key} value={cat.key}>{cat.icon} {cat.label}</option>
                 ))}
                 <option value={NEW_CAT_KEY}>＋ Nouvelle catégorie</option>
               </FormSelect>
             </Field>
-
             <Field label="Statut">
-              <FormSelect
-                value={form.status}
-                onChange={(e) => setField("status", e.target.value)}
-              >
+              <FormSelect value={form.status} onChange={(e) => setField("status", e.target.value)}>
                 <option value="active">Actif</option>
                 <option value="paused">Pausé</option>
                 <option value="trial">Essai</option>
@@ -387,39 +257,18 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
             </Field>
           </div>
 
-          {/* ── Inline new-category form ── */}
+          {/* New category form */}
           {showNewCat && (
-            <div
-              style={{
-                background: "var(--bg-3)",
-                border: "1px solid var(--border)",
-                borderRadius: "10px",
-                padding: "14px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: "8px",
-                  letterSpacing: "1.5px",
-                  textTransform: "uppercase",
-                  color: "var(--gold)",
-                  marginBottom: "2px",
-                }}
-              >
+            <div className="bg-bg-3 border border-border rounded-[10px] p-3.5 flex flex-col gap-2.5">
+              <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-gold mb-0.5">
                 Nouvelle catégorie
               </div>
-
-              {/* Icon + Label row */}
-              <div style={{ display: "grid", gridTemplateColumns: "64px 1fr", gap: "10px" }}>
+              <div className="grid gap-2.5" style={{ gridTemplateColumns: "64px 1fr" }}>
                 <FormInput
                   value={newCatIcon}
                   onChange={(e) => setNewCatIcon(e.target.value)}
                   placeholder="⭐"
-                  style={{ textAlign: "center", fontSize: "18px" }}
+                  className="text-center text-lg"
                 />
                 <FormInput
                   value={newCatLabel}
@@ -427,62 +276,33 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                   placeholder="ex: Musique"
                 />
               </div>
-
-              {/* Color swatches */}
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <div className="flex gap-2 flex-wrap">
                 {COLOR_PALETTE.map((color) => (
                   <button
                     key={color}
                     onClick={() => setNewCatColor(color)}
+                    className="w-6 h-6 rounded-full cursor-pointer p-0 shrink-0 border-2"
                     style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
                       background: color,
-                      border: newCatColor === color
-                        ? "2px solid var(--text)"
-                        : "2px solid transparent",
-                      cursor: "pointer",
-                      padding: 0,
-                      flexShrink: 0,
+                      borderColor: newCatColor === color ? "var(--text)" : "transparent",
                     }}
                   />
                 ))}
               </div>
-
-              {/* Actions */}
-              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <div className="flex gap-2 justify-end">
                 <button
-                  onClick={() => { setShowNewCat(false); }}
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: "9px",
-                    letterSpacing: "1px",
-                    textTransform: "uppercase",
-                    padding: "6px 12px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    background: "transparent",
-                    border: "1px solid var(--border-2)",
-                    color: "var(--text-faint)",
-                  }}
+                  onClick={() => setShowNewCat(false)}
+                  className="font-plex text-[9px] tracking-[1px] uppercase px-3 py-1.5 rounded-md cursor-pointer bg-transparent border border-border-2 text-text-faint"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleCreateCategory}
+                  className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-1.5 rounded-md cursor-pointer border font-semibold"
                   style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: "9px",
-                    letterSpacing: "1px",
-                    textTransform: "uppercase",
-                    padding: "6px 14px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
                     background: newCatColor,
-                    border: `1px solid ${newCatColor}`,
+                    borderColor: newCatColor,
                     color: "#020d0d",
-                    fontWeight: 600,
                     opacity: newCatLabel.trim() ? 1 : 0.4,
                   }}
                 >
@@ -492,94 +312,59 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
             </div>
           )}
 
-          {/* ── Manage categories toggle ── */}
+          {/* Manage categories toggle */}
           <div>
             <button
               onClick={() => setShowManageCats((v) => !v)}
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: "8px",
-                letterSpacing: "1.5px",
-                textTransform: "uppercase",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--text-faint)",
-                padding: 0,
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
+              className="font-plex text-[8px] tracking-[1.5px] uppercase bg-transparent border-none cursor-pointer text-text-faint p-0 flex items-center gap-1.5"
             >
-              <span style={{ fontSize: "10px" }}>{showManageCats ? "▾" : "▸"}</span>
+              <span className="text-[10px]">{showManageCats ? "▾" : "▸"}</span>
               Gérer les catégories
             </button>
 
             {showManageCats && (
-              <div
-                style={{
-                  marginTop: "10px",
-                  background: "var(--bg-3)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "10px",
-                  padding: "12px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
+              <div className="mt-2.5 bg-bg-3 border border-border rounded-[10px] p-3 flex flex-col gap-1.5">
                 {categories.map((cat) => {
                   const usedBy = subscriptions.filter((s) => s.category === cat.key).length;
                   const canDelete = usedBy === 0;
                   const isEditingThis = editCatKey === cat.key;
                   return (
                     <div key={cat.key}>
-                      {/* ── Row ── */}
                       <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          padding: "6px 8px",
-                          borderRadius: isEditingThis ? "7px 7px 0 0" : "7px",
-                          background: "var(--bg-2)",
-                          border: isEditingThis ? "1px solid var(--gold)" : "1px solid transparent",
-                          borderBottom: isEditingThis ? "none" : undefined,
-                        }}
+                        className={cn(
+                          "flex items-center gap-2 px-2 py-1.5 bg-bg-2 border",
+                          isEditingThis
+                            ? "rounded-[7px_7px_0_0] border-gold border-b-0"
+                            : "rounded-[7px] border-transparent",
+                        )}
                       >
-                        <div style={{ width: "26px", height: "26px", borderRadius: "6px", background: `${cat.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", flexShrink: 0 }}>
+                        <div
+                          className="w-[26px] h-[26px] rounded-md flex items-center justify-center text-[13px] shrink-0"
+                          style={{ background: `${cat.color}18` }}
+                        >
                           {cat.icon}
                         </div>
-                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "10px", color: "var(--text)", flex: 1 }}>
-                          {cat.label}
-                        </span>
+                        <span className="font-plex text-[10px] text-text flex-1">{cat.label}</span>
                         {usedBy > 0 && (
-                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", color: "var(--text-faint)" }}>
-                            {usedBy} abo.
-                          </span>
+                          <span className="font-plex text-[8px] text-text-faint">{usedBy} abo.</span>
                         )}
-                        {/* Edit button */}
                         <button
                           onClick={() => isEditingThis ? setEditCatKey(null) : startEditCat(cat)}
                           title={isEditingThis ? "Annuler" : "Modifier"}
-                          style={{
-                            background: "transparent", border: "none",
-                            cursor: "pointer",
-                            color: isEditingThis ? "var(--gold)" : "var(--text-faint)",
-                            fontSize: "12px", lineHeight: 1, padding: "2px 4px", borderRadius: "4px", flexShrink: 0,
-                          }}
+                          className={cn(
+                            "bg-transparent border-none cursor-pointer text-xs leading-none px-1 py-0.5 rounded shrink-0",
+                            isEditingThis ? "text-gold" : "text-text-faint",
+                          )}
                         >
                           ✏
                         </button>
-                        {/* Delete button */}
                         <button
                           onClick={() => { if (canDelete) removeCategory(cat.key); }}
                           title={canDelete ? "Supprimer" : `Utilisée par ${usedBy} abonnement(s)`}
+                          className="bg-transparent border-none text-base leading-none px-1 py-0.5 rounded shrink-0"
                           style={{
-                            background: "transparent", border: "none",
                             cursor: canDelete ? "pointer" : "not-allowed",
                             color: canDelete ? "var(--red)" : "var(--border)",
-                            fontSize: "16px", lineHeight: 1, padding: "2px 4px", borderRadius: "4px", flexShrink: 0,
                             opacity: canDelete ? 1 : 0.4,
                           }}
                         >
@@ -587,15 +372,14 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                         </button>
                       </div>
 
-                      {/* ── Inline edit form ── */}
                       {isEditingThis && (
-                        <div style={{ background: "var(--bg-2)", border: "1px solid var(--gold)", borderTop: "none", borderRadius: "0 0 7px 7px", padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                          <div style={{ display: "grid", gridTemplateColumns: "48px 1fr", gap: "8px" }}>
+                        <div className="bg-bg-2 border border-gold border-t-0 rounded-[0_0_7px_7px] p-2.5 flex flex-col gap-2">
+                          <div className="grid gap-2" style={{ gridTemplateColumns: "48px 1fr" }}>
                             <FormInput
                               value={editCatIcon}
                               onChange={(e) => setEditCatIcon(e.target.value)}
                               placeholder="⭐"
-                              style={{ textAlign: "center", fontSize: "16px" }}
+                              className="text-center text-base"
                             />
                             <FormInput
                               value={editCatLabel}
@@ -603,29 +387,30 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                               placeholder="Nom"
                             />
                           </div>
-                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          <div className="flex gap-1.5 flex-wrap">
                             {COLOR_PALETTE.map((c) => (
                               <button
                                 key={c}
                                 onClick={() => setEditCatColor(c)}
+                                className="w-5 h-5 rounded-full cursor-pointer p-0 shrink-0 border-2"
                                 style={{
-                                  width: "20px", height: "20px", borderRadius: "50%", background: c,
-                                  border: editCatColor === c ? "2px solid var(--text)" : "2px solid transparent",
-                                  cursor: "pointer", padding: 0, flexShrink: 0,
+                                  background: c,
+                                  borderColor: editCatColor === c ? "var(--text)" : "transparent",
                                 }}
                               />
                             ))}
                           </div>
-                          <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                          <div className="flex gap-1.5 justify-end">
                             <button
                               onClick={() => setEditCatKey(null)}
-                              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", letterSpacing: "1px", textTransform: "uppercase", padding: "5px 10px", borderRadius: "6px", cursor: "pointer", background: "transparent", border: "1px solid var(--border-2)", color: "var(--text-faint)" }}
+                              className="font-plex text-[8px] tracking-[1px] uppercase px-2.5 py-[5px] rounded-md cursor-pointer bg-transparent border border-border-2 text-text-faint"
                             >
                               Annuler
                             </button>
                             <button
                               onClick={saveEditCat}
-                              style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "8px", letterSpacing: "1px", textTransform: "uppercase", padding: "5px 12px", borderRadius: "6px", cursor: "pointer", background: "var(--gold)", border: "none", color: "#020d0d", fontWeight: 600, opacity: editCatLabel.trim() ? 1 : 0.4 }}
+                              className="font-plex text-[8px] tracking-[1px] uppercase px-3 py-[5px] rounded-md cursor-pointer bg-gold border-none font-semibold"
+                              style={{ color: "#020d0d", opacity: editCatLabel.trim() ? 1 : 0.4 }}
                             >
                               Enregistrer
                             </button>
@@ -639,9 +424,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
             )}
           </div>
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}
-          >
+          <div className="grid grid-cols-2 gap-3.5">
             <Field label="Montant (DZD)" error={errors.amount}>
               <FormInput
                 type="number"
@@ -652,7 +435,6 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                 error={errors.amount}
               />
             </Field>
-
             <Field label="Jour de renouvellement" error={errors.renewalDay}>
               <FormInput
                 type="number"
@@ -675,32 +457,12 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
           </Field>
         </div>
 
-        {/* ── Actions ── */}
-        <div
-          style={{
-            marginTop: "24px",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          {/* Delete — two-step confirmation */}
+        {/* Actions */}
+        <div className="mt-6 flex items-center gap-2.5">
           {isEdit && !confirmDelete && (
             <button
               onClick={() => setConfirmDelete(true)}
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: "9px",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                background: "transparent",
-                border: "1px solid rgba(248,113,113,0.3)",
-                color: "var(--red)",
-                transition: "all 0.2s ease",
-              }}
+              className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-[rgba(248,113,113,0.3)] text-red"
             >
               Supprimer
             </button>
@@ -708,61 +470,24 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
           {isEdit && confirmDelete && (
             <button
               onClick={handleDelete}
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: "9px",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                background: "rgba(248,113,113,0.15)",
-                border: "1px solid var(--red)",
-                color: "var(--red)",
-                transition: "all 0.2s ease",
-              }}
+              className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-[rgba(248,113,113,0.15)] border border-red text-red"
             >
               Confirmer →
             </button>
           )}
 
-          <div style={{ flex: 1 }} />
+          <div className="flex-1" />
 
           <button
             onClick={onClose}
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: "9px",
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-              padding: "8px 14px",
-              borderRadius: "8px",
-              cursor: "pointer",
-              background: "transparent",
-              border: "1px solid var(--border-2)",
-              color: "var(--text-faint)",
-              transition: "all 0.2s ease",
-            }}
+            className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
           >
             Annuler
           </button>
-
           <button
             onClick={handleSave}
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: "9px",
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              cursor: "pointer",
-              background: "var(--gold)",
-              border: "1px solid var(--gold)",
-              color: "#020d0d",
-              fontWeight: 600,
-              transition: "all 0.2s ease",
-            }}
+            className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg cursor-pointer bg-gold border border-gold font-semibold"
+            style={{ color: "#020d0d" }}
           >
             {isEdit ? "Enregistrer" : "Ajouter"}
           </button>

@@ -1,14 +1,3 @@
-// src/App.jsx
-// ─────────────────────────────────────────────────────────────
-// Root component. Now just a shell — layout + providers.
-// All dashboard content lives in src/pages/Dashboard.jsx.
-//
-// To add new pages later:
-//   import { Budget } from "./pages/Budget"
-//   import { Settings } from "./pages/Settings"
-//   and render them based on active route or sidebar state
-// ─────────────────────────────────────────────────────────────
-
 import { useState } from "react";
 import { StoreProvider } from "./store/useStore";
 import { AppHeader } from "./components/layout/AppHeader";
@@ -22,24 +11,14 @@ export default function App() {
 
   return (
     <StoreProvider>
-      <div
-        style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}
-      >
+      <div className="flex min-h-screen bg-bg">
         <AppSidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           currentPage={currentPage}
           onNavigate={setCurrentPage}
         />
-
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            minWidth: 0,
-          }}
-        >
+        <div className="flex flex-col flex-1 min-w-0">
           <AppHeader onMenuClick={() => setSidebarOpen((v) => !v)} />
           {currentPage === "settings" ? <Parametres /> : <Dashboard />}
         </div>
