@@ -1,6 +1,6 @@
 # SubDz — Subscription Tracker
 
-A personal subscription management dashboard built for Algerian users. Track monthly subscriptions, manage budgets per category, and get renewal alerts — all stored locally in the browser.
+A personal subscription management dashboard built for Algerian users. Track monthly subscriptions, manage budgets per category, and get renewal alerts — all stored locally in the browser. Includes a streaming AI assistant (SubDz AI) powered by Claude.
 
 ---
 
@@ -17,46 +17,75 @@ A personal subscription management dashboard built for Algerian users. Track mon
 | UI primitives | Radix UI (avatar, dialog, dropdown, select, switch, tabs, tooltip) |
 | State / persistence | React Context + localStorage (no external state library) |
 | Currency | DZD (Algerian Dinar) |
+| AI | Vercel AI SDK + Claude (Anthropic) via serverless API route |
+| Rate limiting | Upstash Redis (`@upstash/ratelimit`) |
 
 ---
 
 ## Project Structure
 
 ```
-src/
-├── App.jsx                        # Root — StoreProvider + layout shell
-├── pages/
-│   └── dashboard.jsx              # Main dashboard page
-├── store/
-│   └── useStore.jsx               # Global state (subscriptions, budget, categories, profile)
-├── hooks/
-│   └── useSubscriptions.js        # Shared hooks: useKPI, useMediaGrid, useWideLayout
-├── lib/
-│   └── utils.js                   # Pure utilities: formatDZD, daysUntil, computeBreakdown, etc.
-├── data/
-│   └── subscriptions.js           # Seed/mock data loaded on first launch
-└── components/
-    ├── layout/
-    │   ├── AppHeader.jsx           # Sticky top bar — theme toggle, avatar, hamburger on mobile
-    │   └── AppSidebar.jsx          # Collapsible left nav — overlay on mobile
-    ├── kpi/
-    │   └── KPIRow.jsx              # 4 summary cards (total, active count, savings, next renewal)
-    ├── subs/
-    │   └── SubscriptionPanel.jsx   # Subscription grid with category filter tabs
-    ├── subscription/
-    │   └── SubscriptionModal.jsx   # Add / edit / delete modal + inline new-category form
-    ├── upcoming/
-    │   └── UpcomingRenewals.jsx    # Sorted list of upcoming renewals
-    ├── budget/
-    │   └── BudgetPanel.jsx         # Per-category budget bars with inline editing
-    ├── charts/
-    │   ├── CategoryBreakdown.jsx   # Spending breakdown by category
-    │   └── TrendCharts.jsx         # Monthly spending trend (Recharts)
-    ├── insight/
-    │   └── InsightCard.jsx         # Single AI-style insight about spending
-    └── settings/
-        └── ProfileModal.jsx        # Edit display name + initials (triggered from avatar)
+subdz/
+├── api/
+│   └── chat.js                    # Serverless backend — rate limiting, sanitization, Claude streaming
+├── src/
+│   ├── App.jsx                    # Root — StoreProvider + layout shell + <AskSubDz />
+│   ├── pages/
+│   │   ├── dashboard.jsx          # Main dashboard page
+│   │   └── Parametres.jsx         # Settings page (profile + category management)
+│   ├── store/
+│   │   └── useStore.jsx           # Global state (subscriptions, budget, categories, profile)
+│   ├── hooks/
+│   │   ├── useSubscriptions.js    # Shared hooks: useKPI, useMediaGrid, useWideLayout
+│   │   └── useSubDzChat.js        # AI chat hook — fetch + streaming + message state
+│   ├── lib/
+│   │   └── utils.js               # Pure utilities: formatDZD, daysUntil, computeBreakdown, etc.
+│   ├── data/
+│   │   └── subscriptions.js       # Seed/mock data loaded on first launch
+│   └── components/
+│       ├── layout/
+│       │   ├── AppHeader.jsx      # Sticky top bar — theme toggle, avatar, hamburger on mobile
+│       │   └── AppSidebar.jsx     # Collapsible left nav — overlay on mobile
+│       ├── ai/
+│       │   ├── AskSubDz.jsx       # Floating teal button (bottom-right) that opens the chat
+│       │   ├── ChatPanel.jsx      # Chat window — messages list + input bar
+│       │   └── MessageBubble.jsx  # Single message bubble (user or assistant)
+│       ├── kpi/
+│       │   └── KPIRow.jsx         # 4 summary cards (total, active count, savings, next renewal)
+│       ├── subs/
+│       │   └── SubscriptionPanel.jsx   # Subscription grid with category filter tabs
+│       ├── subscription/
+│       │   └── SubscriptionModal.jsx   # Add / edit / delete modal + inline new-category form
+│       ├── upcoming/
+│       │   └── UpcomingRenewals.jsx    # Sorted list of upcoming renewals
+│       ├── budget/
+│       │   └── BudgetPanel.jsx         # Per-category budget bars with inline editing
+│       ├── charts/
+│       │   ├── CategoryBreakdown.jsx   # Spending breakdown by category
+│       │   └── TrendCharts.jsx         # Monthly spending trend (Recharts)
+│       ├── insight/
+│       │   └── InsightCard.jsx         # Single AI-style insight about spending
+│       └── settings/
+│           └── ProfileModal.jsx        # Edit display name + initials (triggered from avatar)
 ```
+
+---
+
+## AI Feature (SubDz AI)
+
+A floating chat button (bottom-right) opens a teal-themed panel where users can ask questions about their subscriptions in Arabic, French, English, or Darija. Claude streams replies word-by-word.
+
+**Security measures in `api/chat.js`:**
+- API key stored server-side only — never shipped to the browser
+- Rate limited to 20 requests / hour per IP (Upstash Redis)
+- User input sanitized (control characters stripped, max 500 characters)
+- Prompt injection defense baked into the system prompt
+
+**Planned phases:**
+- Phase 1 ✅ — Streaming chat foundation
+- Phase 2 — RAG: inject user's real subscription data into the system prompt
+- Phase 3 — Inline components: Claude renders charts and cards inside chat bubbles
+- Phase 4 — Algerian polish: local carrier/service knowledge, Darija, Ramadan awareness
 
 ---
 
@@ -87,12 +116,40 @@ On first launch the store seeds from `src/data/subscriptions.js` so the dashboar
 
 ## Getting Started
 
+### Without AI features
+
 ```bash
 npm install
 npm run dev
 ```
 
+### With AI features (required for `/api/chat`)
+
+The AI backend runs as a Vercel serverless function and needs the Vercel CLI:
+
 ```bash
-npm run build    # production build
-npm run preview  # preview production build locally
+npm install -g vercel
+vercel login
+vercel link        # link or create a Vercel project for this repo
+```
+
+Create `.env.local` in the project root with your credentials:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+UPSTASH_REDIS_REST_URL=https://...upstash.io
+UPSTASH_REDIS_REST_TOKEN=...
+```
+
+Then start the dev server:
+
+```bash
+vercel dev         # runs Vite frontend + /api routes together on localhost:3000
+```
+
+> `.env.local` is gitignored. See `.env.example` for the required variable names.
+
+```bash
+npm run build      # production build
+npm run preview    # preview production build locally
 ```

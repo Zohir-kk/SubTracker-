@@ -4,6 +4,7 @@ import { AppHeader } from "./components/layout/AppHeader";
 import { AppSidebar } from "./components/layout/AppSidebar";
 import { Dashboard } from "./pages/dashboard";
 import { Parametres } from "./pages/Parametres";
+import { AskSubDz } from "./components/ai/AskSubDz";
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function App() {
           {currentPage === "settings" ? <Parametres /> : <Dashboard />}
         </div>
       </div>
+      <AskSubDz />
     </StoreProvider>
   );
 }
