@@ -1,6 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
+import { useStore } from '@/store/useStore';
+import { buildContext } from '@/lib/buildContext';
 
 export function useSubDzChat() {
+  const { subscriptions, budgetLimits, categories } = useStore();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -9,21 +12,22 @@ export function useSubDzChat() {
 
   const sendMessage = useCallback(async (text) => {
     const userMsg = { role: 'user', content: text };
-    // Snapshot of messages including the new user message
     const history = [...messages, userMsg];
 
-    // Immediately show the user message + an empty assistant bubble
     setMessages([...history, { role: 'assistant', content: '' }]);
     setIsLoading(true);
     setError(null);
 
     abortRef.current = new AbortController();
 
+    // Build the context block from live store data
+    const context = buildContext(subscriptions, budgetLimits, categories);
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, context }),
         signal: abortRef.current.signal,
       });
 
@@ -32,7 +36,6 @@ export function useSubDzChat() {
         throw new Error(data.error ?? `Server error ${res.status}`);
       }
 
-      // Read the response body as a stream of text chunks
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let assistantContent = '';
@@ -40,15 +43,12 @@ export function useSubDzChat() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         assistantContent += decoder.decode(value, { stream: true });
-        // Update the last message (assistant bubble) on every chunk
         setMessages([...history, { role: 'assistant', content: assistantContent }]);
       }
     } catch (err) {
       if (err.name === 'AbortError') return;
       setError(err.message);
-      // Replace the empty assistant bubble with an error notice
       setMessages([
         ...history,
         { role: 'assistant', content: `⚠️ ${err.message}` },
@@ -56,7 +56,7 @@ export function useSubDzChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages]);
+  }, [messages, subscriptions, budgetLimits, categories]);
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
