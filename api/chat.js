@@ -5,29 +5,53 @@ import { Redis } from "@upstash/redis";
 
 // Hardcode base URL so any system-level ANTHROPIC_BASE_URL is ignored
 const anthropic = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY || "",
   baseURL: "https://api.anthropic.com/v1",
 });
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(20, "1 h"),
-});
+let ratelimit = null;
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(20, "1 h"),
+    });
+  }
+} catch (e) {
+  console.warn("[api/chat] Upstash Redis not configured, bypassing rate limiting:", e.message);
+}
 
+// We use standard Node runtime to avoid the Vercel Edge Emulator crash on Windows
 export default async function handler(req, res) {
-  const origin = req.headers.origin ?? "";
+  const origin = req.headers.origin ?? "*";
   res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  
+  // PREVENT BUFFERING
+  res.setHeader("X-Accel-Buffering", "no");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Content-Encoding", "none");
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: "ANTHROPIC_API_KEY is not configured on the server." });
+  }
+
   // --- Rate limiting ---
-  const ip = String(req.headers["x-forwarded-for"] ?? "anonymous").split(",")[0].trim();
-  const { success } = await ratelimit.limit(ip);
-  if (!success) {
-    return res.status(429).json({ error: "Too many requests. Try again in an hour." });
+  if (ratelimit) {
+    try {
+      const ip = String(req.headers["x-forwarded-for"] ?? "anonymous").split(",")[0].trim();
+      const { success } = await ratelimit.limit(ip);
+      if (!success) {
+        return res.status(429).json({ error: "Too many requests. Try again in an hour." });
+      }
+    } catch (rlErr) {
+      console.warn("[api/chat] Rate limiting check error:", rlErr);
+    }
   }
 
   // --- Parse body ---
@@ -79,6 +103,7 @@ RULES:
       model: anthropic("claude-haiku-4-5-20251001"),
       system,
       messages: sanitizedMessages,
+      maxOutputTokens: 350,
     });
 
     result.pipeTextStreamToResponse(res);
