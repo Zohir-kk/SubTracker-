@@ -15,7 +15,7 @@ function BreakdownRow({ item, animate }) {
         <div className="flex justify-between items-baseline mb-1.5">
           <span className="font-plex text-[10px] text-text">{item.label}</span>
           <span
-            className="font-playfair text-sm font-semibold"
+            className="font-sans text-sm font-semibold"
             style={{ color: item.color }}
           >
             {formatDZD(item.amount)}
@@ -54,7 +54,7 @@ export function CategoryBreakdown() {
     <div className="bg-bg-2 border border-border-2 rounded-[14px] p-[18px]">
       <div className="flex items-center gap-2 mb-5">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-        <div className="font-playfair text-base font-semibold text-text">Par catégorie</div>
+        <div className="font-sans text-base font-semibold text-text">Par catégorie</div>
         <div className="ml-auto font-plex text-[9px] text-text-faint tracking-[1px]">
           {formatDZD(total)} DZD
         </div>

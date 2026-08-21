@@ -10,16 +10,23 @@ export function formatDZD(amount) {
 }
 
 export function daysUntil(day) {
-  const today = new Date();
-  const target = new Date(today.getFullYear(), today.getMonth(), day);
-  if (target < today) target.setMonth(target.getMonth() + 1);
-  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let target = new Date(today.getFullYear(), today.getMonth(), day);
+  if (target < today) {
+    target = new Date(today.getFullYear(), today.getMonth() + 1, day);
+  }
+  const diffTime = target.getTime() - today.getTime();
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
 }
 
 export function renewalMonth(day) {
-  const today = new Date();
-  const target = new Date(today.getFullYear(), today.getMonth(), day);
-  if (target < today) target.setMonth(target.getMonth() + 1);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let target = new Date(today.getFullYear(), today.getMonth(), day);
+  if (target < today) {
+    target = new Date(today.getFullYear(), today.getMonth() + 1, day);
+  }
   return target.toLocaleDateString("fr-DZ", { month: "short" });
 }
 

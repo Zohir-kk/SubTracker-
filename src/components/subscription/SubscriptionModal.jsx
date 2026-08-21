@@ -206,7 +206,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-6">
           <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-          <div className="font-playfair text-[17px] font-semibold text-text">
+          <div className="font-sans text-[17px] font-semibold text-text">
             {isEdit ? "Modifier l'abonnement" : "Nouvel abonnement"}
           </div>
           <button

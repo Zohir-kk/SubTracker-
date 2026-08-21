@@ -18,7 +18,7 @@ function KPICard({ label, value, sub, accent, delta, deltaUp, compact }) {
         {label}
       </div>
       <div
-        className={`font-playfair font-bold text-text leading-none mb-1 ${compact ? "text-[22px]" : "text-3xl"}`}
+        className={`font-sans font-bold text-text leading-none mb-1 ${compact ? "text-[22px]" : "text-3xl"}`}
       >
         {value}
       </div>

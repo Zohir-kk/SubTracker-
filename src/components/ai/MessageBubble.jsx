@@ -3,20 +3,8 @@ export function MessageBubble({ message }) {
 
   if (isUser) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-        <div
-          style={{
-            maxWidth: '78%',
-            padding: '10px 14px',
-            borderRadius: '16px 16px 4px 16px',
-            background: 'var(--gold-dim)',
-            border: '1px solid var(--border)',
-            color: 'var(--text)',
-            fontSize: '14px',
-            lineHeight: '1.55',
-            wordBreak: 'break-word',
-          }}
-        >
+      <div className="flex justify-end mb-2.5">
+        <div className="max-w-[80%] px-3.5 py-2.5 rounded-[16px_16px_4px_16px] bg-gold-dim border border-border text-text font-plex text-xs leading-relaxed break-words">
           {message.content}
         </div>
       </div>
@@ -24,53 +12,15 @@ export function MessageBubble({ message }) {
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '10px' }}>
+    <div className="flex justify-start mb-2.5">
       {/* Avatar dot */}
-      <div
-        style={{
-          width: '26px',
-          height: '26px',
-          borderRadius: '50%',
-          background: 'var(--gold)',
-          flexShrink: 0,
-          marginRight: '8px',
-          marginTop: '2px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '11px',
-          fontWeight: '700',
-          color: 'var(--bg)',
-        }}
-      >
+      <div className="w-[26px] h-[26px] rounded-full bg-gold shrink-0 mr-2 mt-0.5 flex items-center justify-center text-[10px] font-bold text-[#020d0d] font-plex">
         AI
       </div>
-      <div
-        style={{
-          maxWidth: '78%',
-          padding: '10px 14px',
-          borderRadius: '4px 16px 16px 16px',
-          background: 'var(--bg-3)',
-          border: '1px solid var(--border-2)',
-          color: 'var(--text)',
-          fontSize: '14px',
-          lineHeight: '1.55',
-          wordBreak: 'break-word',
-          whiteSpace: 'pre-wrap',
-        }}
-      >
+      <div className="max-w-[80%] px-3.5 py-2.5 rounded-[4px_16px_16px_16px] bg-bg-3 border border-border-2 text-text font-plex text-xs leading-relaxed break-words whitespace-pre-wrap">
         {message.content || (
           // Blinking cursor while streaming
-          <span
-            style={{
-              display: 'inline-block',
-              width: '8px',
-              height: '14px',
-              background: 'var(--gold)',
-              borderRadius: '2px',
-              animation: 'blink 1s step-end infinite',
-            }}
-          />
+          <span className="inline-block w-2 h-3.5 bg-gold rounded-sm animate-pulse" />
         )}
       </div>
     </div>

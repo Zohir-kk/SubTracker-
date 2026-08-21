@@ -24,33 +24,8 @@ export function AskSubDz() {
       {/* Floating trigger button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? 'Close AI chat' : 'Open AI chat'}
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
-          border: 'none',
-          background: 'var(--gold)',
-          color: 'var(--bg)',
-          cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(45, 212, 191, 0.45)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 51,
-          transition: 'transform 0.2s, box-shadow 0.2s',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.08)';
-          e.currentTarget.style.boxShadow = '0 6px 28px rgba(45, 212, 191, 0.6)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 4px 20px rgba(45, 212, 191, 0.45)';
-        }}
+        aria-label={open ? 'Fermer le chat AI' : 'Ouvrir le chat SubDz AI'}
+        className="fixed bottom-5 right-5 w-14 h-14 rounded-full border-none bg-gold text-[#020d0d] cursor-pointer shadow-[0_4px_20px_rgba(45,212,191,0.45)] hover:shadow-[0_6px_28px_rgba(45,212,191,0.6)] hover:scale-105 flex items-center justify-center z-[250] transition-all duration-200"
       >
         {open ? (
           // X icon when open

@@ -28,7 +28,7 @@ function Section({ title, children }) {
     <div className="bg-bg-2 border border-border-2 rounded-2xl p-6 mb-4">
       <div className="flex items-center gap-2.5 mb-6">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-        <span className="font-playfair text-[17px] font-semibold text-text">{title}</span>
+        <span className="font-sans text-[17px] font-semibold text-text">{title}</span>
       </div>
       {children}
     </div>
@@ -409,7 +409,7 @@ export function Parametres() {
   return (
     <div className="p-2.5 md:p-4 overflow-y-auto">
       <div className="mb-5">
-        <div className="font-playfair text-[22px] font-bold text-text mb-1">
+        <div className="font-sans text-[22px] font-bold text-text mb-1">
           Paramètres
         </div>
         <div className="font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">

@@ -31,9 +31,11 @@ export default {
         },
       },
       fontFamily: {
+        sans: ['"Space Grotesk"', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'monospace'],
         playfair: ['"Playfair Display"', 'serif'],
-        plex: ['"IBM Plex Mono"', 'monospace'],
-        dm: ['"DM Mono"', 'monospace'],
+        plex: ['"Space Grotesk"', 'sans-serif'],
+        dm: ['"Space Grotesk"', 'sans-serif'],
       },
       boxShadow: {
         card: 'var(--shadow-card)',

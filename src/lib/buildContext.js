@@ -9,11 +9,14 @@ export function buildContext(subscriptions, budgetLimits, categories) {
   const totalSpent = active.reduce((sum, s) => sum + s.amount, 0);
   const totalBudget = Object.values(budgetLimits).reduce((sum, v) => sum + v, 0);
 
-  const today = new Date();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   function nextRenewal(day) {
-    const d = new Date(today.getFullYear(), today.getMonth(), day);
-    if (d <= today) d.setMonth(d.getMonth() + 1);
+    let d = new Date(today.getFullYear(), today.getMonth(), day);
+    if (d < today) {
+      d = new Date(today.getFullYear(), today.getMonth() + 1, day);
+    }
     return d.toISOString().split('T')[0];
   }
 
