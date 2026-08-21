@@ -10,102 +10,31 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
   }, [messages]);
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: '88px',
-        right: '20px',
-        width: '360px',
-        maxWidth: 'calc(100vw - 32px)',
-        height: '520px',
-        maxHeight: 'calc(100vh - 120px)',
-        background: 'var(--bg-2)',
-        border: '1px solid var(--border)',
-        borderRadius: '20px',
-        boxShadow: 'var(--shadow-card), var(--shadow-gold)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        zIndex: 50,
-      }}
-    >
+    <div className="fixed bottom-[88px] right-5 w-[360px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-120px)] bg-bg-2 border border-border rounded-[20px] shadow-card shadow-gold flex flex-col overflow-hidden z-[240]">
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '14px 16px',
-          borderBottom: '1px solid var(--border-2)',
-          background: 'var(--bg-3)',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: 'var(--gold)',
-              boxShadow: '0 0 6px var(--gold)',
-            }}
-          />
-          <span
-            style={{
-              color: 'var(--gold)',
-              fontWeight: '700',
-              fontSize: '15px',
-              letterSpacing: '0.02em',
-            }}
-          >
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-border-2 bg-bg-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-gold shadow-[0_0_6px_var(--gold)]" />
+          <span className="text-gold font-bold text-sm tracking-wide font-plex">
             SubDz AI
           </span>
         </div>
         <button
           onClick={onClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            fontSize: '20px',
-            lineHeight: '1',
-            padding: '2px 6px',
-            borderRadius: '6px',
-          }}
-          aria-label="Close chat"
+          className="bg-transparent border-none text-text-faint cursor-pointer text-xl leading-none px-1.5 py-0.5 rounded hover:text-text"
+          aria-label="Fermer le chat"
         >
           ×
         </button>
       </div>
 
       {/* Messages */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col">
         {messages.length === 0 && (
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--text-muted)',
-              textAlign: 'center',
-              gap: '10px',
-            }}
-          >
-            <div style={{ fontSize: '32px' }}>✦</div>
-            <p style={{ fontSize: '14px', lineHeight: '1.5', maxWidth: '220px' }}>
-              Ask me about your subscriptions, budget, or anything Algerian telecom.
+          <div className="flex-1 flex flex-col items-center justify-center text-text-muted text-center gap-2.5">
+            <div className="text-3xl text-gold">✦</div>
+            <p className="text-xs leading-relaxed max-w-[240px] font-plex">
+              Posez une question sur vos abonnements, votre budget, ou les forfaits télécom en Algérie.
             </p>
           </div>
         )}
@@ -119,52 +48,22 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
       {/* Input */}
       <form
         onSubmit={handleSubmit}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '12px',
-          borderTop: '1px solid var(--border-2)',
-          background: 'var(--bg-3)',
-          flexShrink: 0,
-        }}
+        className="flex items-center gap-2 p-3 border-t border-border-2 bg-bg-3 shrink-0"
       >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about your subscriptions…"
+          placeholder="Poser une question…"
           disabled={isLoading}
-          style={{
-            flex: 1,
-            background: 'var(--bg-4)',
-            border: '1px solid var(--border)',
-            borderRadius: '12px',
-            padding: '9px 14px',
-            color: 'var(--text)',
-            fontSize: '14px',
-            outline: 'none',
-          }}
+          className="flex-1 bg-bg border border-border rounded-xl px-3.5 py-2 text-text font-plex text-xs outline-none focus:border-gold placeholder:text-text-faint"
         />
         {isLoading ? (
           <button
             type="button"
             onClick={stop}
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              border: '1px solid var(--border)',
-              background: 'var(--bg-4)',
-              color: 'var(--red)',
-              cursor: 'pointer',
-              fontSize: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-            aria-label="Stop"
+            className="w-9 h-9 rounded-xl border border-border bg-bg-4 text-red cursor-pointer text-sm flex items-center justify-center shrink-0"
+            aria-label="Arrêter la réponse"
           >
             ■
           </button>
@@ -172,22 +71,12 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
           <button
             type="submit"
             disabled={!input.trim()}
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              border: 'none',
-              background: input.trim() ? 'var(--gold)' : 'var(--bg-4)',
-              color: input.trim() ? 'var(--bg)' : 'var(--text-muted)',
-              cursor: input.trim() ? 'pointer' : 'default',
-              fontSize: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'background 0.15s',
-            }}
-            aria-label="Send"
+            className={`w-9 h-9 rounded-xl border-none text-sm flex items-center justify-center shrink-0 transition-colors duration-150 font-bold ${
+              input.trim()
+                ? "bg-gold text-[#020d0d] cursor-pointer"
+                : "bg-bg-4 text-text-faint cursor-default"
+            }`}
+            aria-label="Envoyer"
           >
             ↑
           </button>

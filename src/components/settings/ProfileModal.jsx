@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useStore } from "../../store/useStore.jsx";
 
 export function ProfileModal({ isOpen, onClose }) {
-  const { profile, setProfile } = useStore();
+  const { profile, setProfile, user, logout } = useStore();
   const [name, setName] = useState("");
   const [initials, setInitials] = useState("");
 
@@ -36,7 +36,7 @@ export function ProfileModal({ isOpen, onClose }) {
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-6">
           <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-          <div className="font-playfair text-[17px] font-semibold text-text">
+          <div className="font-sans text-[17px] font-semibold text-text">
             Profil utilisateur
           </div>
           <button
@@ -57,6 +57,17 @@ export function ProfileModal({ isOpen, onClose }) {
 
         {/* Fields */}
         <div className="flex flex-col gap-3.5">
+          {user?.email && (
+            <div>
+              <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-text-faint mb-[5px]">
+                Email
+              </div>
+              <div className="w-full bg-bg-3 border border-border-2 rounded-lg px-3 py-[9px] font-plex text-[11px] text-text-faint">
+                {user.email}
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-text-faint mb-[5px]">
               Nom affiché
@@ -84,23 +95,35 @@ export function ProfileModal({ isOpen, onClose }) {
         </div>
 
         {/* Actions */}
-        <div className="mt-5 flex gap-2.5 justify-end">
+        <div className="mt-5 flex gap-2.5 justify-between">
           <button
-            onClick={onClose}
-            className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={handleSave}
-            className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg cursor-pointer border-none font-semibold"
-            style={{
-              background: name.trim() ? "var(--gold)" : "var(--border-2)",
-              color: "#020d0d",
+            onClick={() => {
+              onClose();
+              logout();
             }}
+            className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-red/10 border border-red/20 text-red hover:bg-red/20 transition-colors"
           >
-            Enregistrer
+            Déconnexion
           </button>
+          
+          <div className="flex gap-2.5">
+            <button
+              onClick={onClose}
+              className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleSave}
+              className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg cursor-pointer border-none font-semibold"
+              style={{
+                background: name.trim() ? "var(--gold)" : "var(--border-2)",
+                color: "#020d0d",
+              }}
+            >
+              Enregistrer
+            </button>
+          </div>
         </div>
       </div>
     </div>,

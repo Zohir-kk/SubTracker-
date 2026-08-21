@@ -133,7 +133,7 @@ function NotificationBell() {
         <div className="absolute top-[calc(100%+8px)] right-0 w-[280px] bg-bg-2 border border-border rounded-xl shadow-card z-[500] overflow-hidden">
           <div className="px-3.5 py-3 border-b border-border-2 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-red shrink-0" />
-            <span className="font-playfair text-sm font-semibold text-text">
+            <span className="font-sans text-sm font-semibold text-text">
               Renouvellements proches
             </span>
           </div>

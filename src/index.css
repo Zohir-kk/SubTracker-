@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -73,11 +73,25 @@
   --grid-line: rgba(13, 148, 136, 0.05);
 }
 
+html {
+  font-size: 18px;
+}
+
 body {
-  font-family: "DM Mono", monospace;
+  font-family: "Space Grotesk", sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+}
+
+.font-plex {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.font-dm {
+  font-weight: 600;
+  font-size: 12px;
 }
 
 /* ── Arabesque Background ── */
@@ -109,18 +123,15 @@ body {
     );
 }
 
-/* ── Theme Transition (all elements) ── */
-*,
-*::before,
-*::after {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 300ms;
+/* ── Theme Transitions (Targeted surfaces) ── */
+body,
+.bg-bg,
+.bg-bg-2,
+.bg-bg-3,
+.bg-bg-4 {
+  transition-property: background-color, border-color, color;
+  transition-duration: 200ms;
   transition-timing-function: ease;
-}
-
-.leaflet-tile,
-.leaflet-tile-container {
-  transition: none !important;
 }
 
 /* ── Animations ── */

@@ -87,7 +87,7 @@ function SubscriptionCard({ sub, onClick, categories }) {
 
       {/* Amount */}
       <div className="flex items-baseline gap-[5px]">
-        <span className="font-playfair text-[22px] font-bold text-text">
+        <span className="font-sans text-[22px] font-bold text-text">
           {formatDZD(sub.amount)}
         </span>
         <span className="font-plex text-[9px] text-text-faint">DZD/mois</span>
@@ -140,18 +140,6 @@ export function SubscriptionPanel() {
   const [activeTab, setActiveTab] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSub, setModalSub] = useState(null);
-  const [cols, setCols] = useState(3);
-
-  useEffect(() => {
-    function update() {
-      if (window.innerWidth < 480) setCols(1);
-      else if (window.innerWidth < 768) setCols(2);
-      else setCols(3);
-    }
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
 
   function openAdd() { setModalSub(null); setModalOpen(true); }
   function openEdit(sub) { setModalSub(sub); setModalOpen(true); }
@@ -166,7 +154,7 @@ export function SubscriptionPanel() {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-        <div className="font-playfair text-base font-semibold text-text">Mes Abonnements</div>
+        <div className="font-sans text-base font-semibold text-text">Mes Abonnements</div>
         <div className="ml-auto flex items-center gap-3">
           <div className="font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">
             {filtered.length} / {subscriptions.length}
@@ -183,10 +171,7 @@ export function SubscriptionPanel() {
 
       <CategoryTabs activeTab={activeTab} onChange={setActiveTab} categories={categories} />
 
-      <div
-        className="grid gap-2.5"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
         {filtered.map((sub) => (
           <SubscriptionCard
             key={sub.id}

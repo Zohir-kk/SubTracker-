@@ -27,7 +27,7 @@ function CustomTooltip({ active, payload, label }) {
       <div className="text-[9px] tracking-[2px] uppercase text-text-faint mb-1">
         {label}
       </div>
-      <div className="text-sm font-medium text-gold">
+      <div className="text-sm font-sans font-medium text-gold">
         {formatDZD(payload[0].value)}
       </div>
     </div>
@@ -52,7 +52,7 @@ export function TrendChart() {
     <div className="bg-bg-2 border border-border-2 rounded-[14px] px-[18px] pt-[18px] pb-2.5 mb-4">
       <div className="flex items-center gap-2 mb-5">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-        <div className="font-playfair text-base font-semibold text-text">
+        <div className="font-sans text-base font-semibold text-text">
           Tendance des dépenses
         </div>
         <div className="ml-auto font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">

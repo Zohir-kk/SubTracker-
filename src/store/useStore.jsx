@@ -1,120 +1,151 @@
 // src/store/useStore.jsx
-// ─────────────────────────────────────────────────────────────
-// Global app state via React Context + localStorage.
-//
-// All components read subscriptions and budgetLimits from here
-// instead of the static data/subscriptions.js file.
-//
-// First launch: seeds from mock data so the dashboard isn't empty.
-// Every mutation (add/update/remove/setBudget) auto-persists.
-// ─────────────────────────────────────────────────────────────
-
 import { createContext, useContext, useState, useEffect } from "react";
-import {
-  subscriptions as mockSubs,
-  budgetLimits as mockBudget,
-  CATEGORIES as defaultCategories,
-} from "../data/subscriptions.js";
+import { auth, db } from "../lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc, setDoc, collection, onSnapshot, addDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { CATEGORIES as defaultCategories } from "../data/subscriptions.js";
 
 const StoreContext = createContext(null);
 
-// ── STORAGE KEYS ──────────────────────────────────────────────
-const SUBS_KEY    = "subdz_subscriptions";
-const BUDGET_KEY  = "subdz_budget";
-const CATS_KEY    = "subdz_categories";
-const PROFILE_KEY = "subdz_profile";
+const DEFAULT_PROFILE = { name: "User", initials: "U" };
 
-const DEFAULT_PROFILE = { name: "Zohir K.", initials: "ZK" };
-
-// ── HELPERS ───────────────────────────────────────────────────
-function loadJSON(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-// ── STORE PROVIDER ────────────────────────────────────────────
 export function StoreProvider({ children }) {
-  const [subscriptions, setSubscriptions] = useState(() =>
-    loadJSON(SUBS_KEY, mockSubs),
-  );
-  const [budgetLimits, setBudgetLimitsState] = useState(() =>
-    loadJSON(BUDGET_KEY, mockBudget),
-  );
-  const [categories, setCategoriesState] = useState(() =>
-    loadJSON(CATS_KEY, defaultCategories),
-  );
-  const [profile, setProfileState] = useState(() =>
-    loadJSON(PROFILE_KEY, DEFAULT_PROFILE),
-  );
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  useEffect(() => {
-    localStorage.setItem(SUBS_KEY, JSON.stringify(subscriptions));
-  }, [subscriptions]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [budgetLimits, setBudgetLimitsState] = useState({});
+  const [categories, setCategoriesState] = useState(defaultCategories);
+  const [profile, setProfileState] = useState(DEFAULT_PROFILE);
+  const [monthlyBudget, setMonthlyBudgetState] = useState(0);
 
+  // 1. Listen for Auth State
   useEffect(() => {
-    localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetLimits));
-  }, [budgetLimits]);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) {
+        // Clear state if logged out
+        setSubscriptions([]);
+        setBudgetLimitsState({});
+        setCategoriesState(defaultCategories);
+        setProfileState(DEFAULT_PROFILE);
+        setMonthlyBudgetState(0);
+        setAuthLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
+  // 2. Fetch/Listen to Firestore Data when User is logged in
   useEffect(() => {
-    localStorage.setItem(CATS_KEY, JSON.stringify(categories));
-  }, [categories]);
+    if (!user) return;
 
-  useEffect(() => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-  }, [profile]);
+    // Listen to user document (profile, budgetLimits, categories, monthlyBudget)
+    const userDocRef = doc(db, "users", user.uid);
+    const unsubUser = onSnapshot(userDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProfileState(data.profile || DEFAULT_PROFILE);
+        setBudgetLimitsState(data.budgetLimits || {});
+        setCategoriesState(data.categories || defaultCategories);
+        setMonthlyBudgetState(data.monthlyBudget || 0);
+      } else {
+        // Initialize new user document
+        setDoc(userDocRef, {
+          profile: { name: user.displayName || "User", initials: (user.displayName || "User").charAt(0) },
+          budgetLimits: {},
+          categories: defaultCategories,
+          monthlyBudget: 0
+        });
+      }
+      setAuthLoading(false);
+    });
+
+    // Listen to subscriptions subcollection
+    const subsRef = collection(db, "users", user.uid, "subscriptions");
+    const unsubSubs = onSnapshot(subsRef, (snapshot) => {
+      const subs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setSubscriptions(subs);
+    });
+
+    return () => {
+      unsubUser();
+      unsubSubs();
+    };
+  }, [user]);
 
   // ── CRUD ────────────────────────────────────────────────────
 
-  function add(sub) {
-    const id = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    setSubscriptions((prev) => [...prev, { ...sub, id }]);
+  async function add(sub) {
+    if (!user) return;
+    const subsRef = collection(db, "users", user.uid, "subscriptions");
+    await addDoc(subsRef, sub);
   }
 
-  function update(id, updates) {
-    setSubscriptions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updates } : s)),
-    );
+  async function update(id, updates) {
+    if (!user) return;
+    const subRef = doc(db, "users", user.uid, "subscriptions", id);
+    await updateDoc(subRef, updates);
   }
 
-  function remove(id) {
-    setSubscriptions((prev) => prev.filter((s) => s.id !== id));
+  async function remove(id) {
+    if (!user) return;
+    const subRef = doc(db, "users", user.uid, "subscriptions", id);
+    await deleteDoc(subRef);
   }
 
-  function setBudget(category, limit) {
-    setBudgetLimitsState((prev) => ({ ...prev, [category]: limit }));
+  async function setBudget(category, limit) {
+    if (!user) return;
+    const newLimits = { ...budgetLimits, [category]: limit };
+    await updateDoc(doc(db, "users", user.uid), { budgetLimits: newLimits });
   }
 
-  function addCategory(cat) {
-    setCategoriesState((prev) => [...prev, cat]);
+  async function addCategory(cat) {
+    if (!user) return;
+    const newCats = [...categories, cat];
+    await updateDoc(doc(db, "users", user.uid), { categories: newCats });
   }
 
-  function updateCategory(key, updates) {
-    setCategoriesState((prev) => prev.map((c) => c.key === key ? { ...c, ...updates } : c));
+  async function updateCategory(key, updates) {
+    if (!user) return;
+    const newCats = categories.map((c) => c.key === key ? { ...c, ...updates } : c);
+    await updateDoc(doc(db, "users", user.uid), { categories: newCats });
   }
 
-  function removeCategory(key) {
-    setCategoriesState((prev) => prev.filter((c) => c.key !== key));
+  async function removeCategory(key) {
+    if (!user) return;
+    const newCats = categories.filter((c) => c.key !== key);
+    await updateDoc(doc(db, "users", user.uid), { categories: newCats });
   }
 
-  function setProfile(updates) {
-    setProfileState((prev) => ({ ...prev, ...updates }));
+  async function setProfile(updates) {
+    if (!user) return;
+    const newProfile = { ...profile, ...updates };
+    await updateDoc(doc(db, "users", user.uid), { profile: newProfile });
+  }
+
+  async function setMonthlyBudget(value) {
+    if (!user) return;
+    await updateDoc(doc(db, "users", user.uid), { monthlyBudget: value });
+  }
+
+  async function logout() {
+    await signOut(auth);
   }
 
   return (
     <StoreContext.Provider
-      value={{ subscriptions, budgetLimits, categories, profile, add, update, remove, setBudget, addCategory, updateCategory, removeCategory, setProfile }}
+      value={{ 
+        user, authLoading, logout,
+        subscriptions, budgetLimits, categories, profile, monthlyBudget, 
+        add, update, remove, setBudget, addCategory, updateCategory, removeCategory, setProfile, setMonthlyBudget 
+      }}
     >
       {children}
     </StoreContext.Provider>
   );
 }
 
-// ── USE STORE ─────────────────────────────────────────────────
-// Usage: const { subscriptions, budgetLimits, add, update, remove, setBudget } = useStore()
 export function useStore() {
   const ctx = useContext(StoreContext);
   if (!ctx) throw new Error("useStore must be used inside <StoreProvider>");

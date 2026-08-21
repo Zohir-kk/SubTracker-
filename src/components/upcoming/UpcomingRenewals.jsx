@@ -13,7 +13,7 @@ function UpcomingItem({ sub, days, categories }) {
       {/* Date block */}
       <div className="text-center min-w-[36px] shrink-0">
         <div
-          className="font-playfair text-[22px] font-bold leading-none"
+          className="font-sans text-[22px] font-bold leading-none"
           style={{ color: isSoon ? "var(--red)" : "var(--gold)" }}
         >
           {sub.renewalDay}
@@ -44,7 +44,7 @@ function UpcomingItem({ sub, days, categories }) {
 
       {/* Amount */}
       <div className="text-right shrink-0">
-        <span className="font-playfair text-base font-semibold text-text">
+        <span className="font-sans text-base font-semibold text-text">
           {formatDZD(sub.amount)}
         </span>
         <span className="font-dm text-[8px] text-text-faint ml-[3px]">DZD</span>
@@ -65,7 +65,7 @@ export function UpcomingRenewals() {
     <div className="bg-bg-2 border border-border-2 rounded-[14px] p-[18px] h-full box-border">
       <div className="flex items-center gap-2 mb-1">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-        <div className="font-playfair text-base font-semibold text-text">
+        <div className="font-sans text-base font-semibold text-text">
           Prochains renouvellements
         </div>
         <div className="ml-auto font-dm text-[9px] tracking-[1.5px] uppercase text-text-faint">
