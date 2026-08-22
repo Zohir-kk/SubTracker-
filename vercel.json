@@ -2,5 +2,8 @@
   "buildCommand": "npm run build",
   "devCommand": "vite --port $PORT",
   "outputDirectory": "dist",
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    { "source": "/__/auth/action", "destination": "/index.html" }
+  ]
 }
