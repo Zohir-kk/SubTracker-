@@ -11,7 +11,7 @@ function Logo() {
   const { t } = useLanguage();
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2 sm:gap-3">
       <svg width="28" height="28" viewBox="0 0 28 28" className="shrink-0">
         <polygon points="14,1 27,14 14,27 1,14" fill="var(--gold)" />
         <text x="14" y="19" textAnchor="middle" fontFamily="Georgia, serif" fontSize="11" fontWeight="700" fill="#080c14">
@@ -19,10 +19,10 @@ function Logo() {
         </text>
       </svg>
       <div>
-        <div className="font-playfair text-xl font-bold text-text tracking-[1px] leading-none">
+        <div className="font-playfair text-lg sm:text-xl font-bold text-text tracking-[1px] leading-none">
           {t('app.title')}
         </div>
-        <div className="font-plex text-[8px] text-text-faint tracking-[2px] uppercase mt-[3px]">
+        <div className="hidden sm:block font-plex text-[8px] text-text-faint tracking-[2px] uppercase mt-[3px]">
           {t('app.subtitle')}
         </div>
       </div>
@@ -248,7 +248,7 @@ export function AppHeader({ onMenuClick }) {
 
   return (
     <>
-      <header className="sticky top-0 z-[100] h-[68px] flex items-center justify-between px-4 bg-bg border-b border-border-2 backdrop-blur-md gap-3">
+      <header className="sticky top-0 z-[100] h-[68px] flex items-center justify-between px-2 sm:px-4 bg-bg border-b border-border-2 backdrop-blur-md gap-2 sm:gap-3">
         {!isDesktop && (
           <button
             onClick={onMenuClick}
@@ -260,7 +260,7 @@ export function AppHeader({ onMenuClick }) {
 
         <Logo />
 
-        <div className="flex items-center gap-3 ms-auto">
+        <div className="flex items-center gap-2 sm:gap-3 ms-auto">
           {isDesktop && <MonthBadge />}
           <LanguageSwitcher />
           <NotificationBell />
