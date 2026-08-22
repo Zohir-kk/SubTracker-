@@ -54,7 +54,7 @@ export function AppSidebar({ isOpen, onClose, currentPage, onNavigate }) {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const { profile } = useStore();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isDesktop = useWideLayout(768);
   const isMobileOverlay = !isDesktop;
 
@@ -98,7 +98,7 @@ export function AppSidebar({ isOpen, onClose, currentPage, onNavigate }) {
           ? "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
           : "width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         transform: isMobileOverlay
-          ? isOpen ? "translateX(0)" : "translateX(-100%)"
+          ? isOpen ? "translateX(0)" : (language === 'ar' ? "translateX(100%)" : "translateX(-100%)")
           : "none",
       }}
     >
