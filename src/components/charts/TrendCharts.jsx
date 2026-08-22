@@ -10,16 +10,15 @@ import {
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { trendData } from "../../data/subscriptions";
+import { useStore } from "../../store/useStore.jsx";
+import { formatCurrency } from "../../hooks/useSubscriptions.js";
+import { useLanguage } from "../../providers/LanguageProvider.jsx";
 
-function formatK(value) {
-  return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value;
+function formatValue(amount) {
+  return amount >= 1000 ? `${(amount / 1000).toFixed(1)}k` : amount;
 }
 
-function formatDZD(amount) {
-  return new Intl.NumberFormat("fr-DZ").format(amount) + " DZD";
-}
-
-function CustomTooltip({ active, payload, label }) {
+function CustomTooltip({ active, payload, label, profile }) {
   if (!active || !payload || !payload.length) return null;
 
   return (
@@ -28,7 +27,7 @@ function CustomTooltip({ active, payload, label }) {
         {label}
       </div>
       <div className="text-sm font-sans font-medium text-gold">
-        {formatDZD(payload[0].value)}
+        {formatCurrency(payload[0].value, profile.currency)}
       </div>
     </div>
   );
@@ -36,6 +35,8 @@ function CustomTooltip({ active, payload, label }) {
 
 export function TrendChart() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
+  const { profile } = useStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -53,10 +54,10 @@ export function TrendChart() {
       <div className="flex items-center gap-2 mb-5">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
         <div className="font-sans text-base font-semibold text-text">
-          Tendance des dépenses
+          {t('trend.title')}
         </div>
-        <div className="ml-auto font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">
-          6 mois
+        <div className="ms-auto font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">
+          {t('trend.period')}
         </div>
       </div>
 
@@ -76,14 +77,14 @@ export function TrendChart() {
             tickLine={false}
           />
           <YAxis
-            tickFormatter={formatK}
+            tickFormatter={formatValue}
             tick={{ fill: tickColor, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9 }}
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip
-            content={<CustomTooltip />}
-            cursor={{ stroke: accentColor, strokeWidth: 1, strokeDasharray: "4 4" }}
+          <Tooltip 
+            content={<CustomTooltip profile={profile} />} 
+            cursor={{ stroke: accentColor, strokeWidth: 1, strokeDasharray: "4 4" }} 
           />
           <Area
             type="monotone"

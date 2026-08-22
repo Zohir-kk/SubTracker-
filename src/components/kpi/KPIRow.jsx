@@ -2,16 +2,17 @@ import {
   useKPI,
   useMediaGrid,
   useWideLayout,
-  formatDZD,
+  formatCurrency,
 } from "../../hooks/useSubscriptions.js";
 import { useStore } from "../../store/useStore.jsx";
+import { useLanguage } from "../../providers/LanguageProvider.jsx";
 
 function KPICard({ label, value, sub, accent, delta, deltaUp, compact }) {
   return (
     <div className="bg-bg-2 border border-border-2 rounded-xl px-5 pt-[18px] pb-3.5 relative overflow-hidden cursor-default hover:border-border hover:-translate-y-0.5 transition-[border-color,transform] duration-200">
       {/* Corner accent blob */}
       <div
-        className="absolute top-0 right-0 w-20 h-20 rounded-[0_12px_0_80px] pointer-events-none opacity-[0.08]"
+        className="absolute top-0 end-0 w-20 h-20 rounded-none rounded-se-[12px] rounded-es-[80px] pointer-events-none opacity-[0.08]"
         style={{ background: accent }}
       />
       <div className="font-plex text-[9px] tracking-[2px] uppercase text-text-faint mb-2.5">
@@ -37,48 +38,49 @@ function KPICard({ label, value, sub, accent, delta, deltaUp, compact }) {
 }
 
 export function KPIRow() {
-  const { subscriptions } = useStore();
+  const { subscriptions, profile } = useStore();
   const { total, activeCount, savings, next } = useKPI();
   const cols = useMediaGrid(4);
   const isWide = useWideLayout(768);
+  const { t } = useLanguage();
 
   const cards = [
     {
-      label: "Total mensuel",
-      value: formatDZD(total),
-      sub: "DZD / mois",
+      label: t('kpi.total.label'),
+      value: formatCurrency(total, profile.currency),
+      sub: t('kpi.total.sub'),
       accent: "var(--gold)",
-      delta: "▲ abonnements actifs + essai",
+      delta: t('kpi.total.delta'),
       deltaUp: true,
     },
     {
-      label: "Abonnements actifs",
+      label: t('kpi.active.label'),
       value: activeCount,
-      sub: `sur ${subscriptions.length} au total`,
+      sub: t('kpi.active.sub', { total: subscriptions.length }),
       accent: "var(--teal)",
-      delta: "— stable ce mois",
+      delta: t('kpi.active.delta'),
       deltaUp: false,
     },
     {
-      label: "Économies possibles",
-      value: savings > 0 ? formatDZD(savings) : "—",
-      sub: savings > 0 ? "DZD en abonnements pausés" : "aucun abonnement pausé",
+      label: t('kpi.savings.label'),
+      value: savings > 0 ? formatCurrency(savings, profile.currency) : "—",
+      sub: savings > 0 ? t('kpi.savings.sub_has') : t('kpi.savings.sub_none'),
       accent: "var(--green)",
-      delta: savings > 0 ? "▼ abonnements en pause" : null,
+      delta: savings > 0 ? t('kpi.savings.delta') : null,
       deltaUp: false,
     },
     {
-      label: "Prochain renouvellement",
+      label: t('kpi.next.label'),
       value: next
         ? next.days === 0
-          ? "Aujourd'hui"
+          ? t('time.today')
           : next.days === 1
-            ? "Demain"
-            : `Dans ${next.days}j`
+            ? t('time.tomorrow')
+            : t('time.inDays', { days: next.days })
         : "—",
-      sub: next ? `${next.name} — ${formatDZD(next.amount)} DZD` : null,
+      sub: next ? `${next.name} — ${formatCurrency(next.amount, profile.currency)}` : null,
       accent: "var(--red)",
-      delta: next && next.days <= 3 ? "● Renouvellement imminent" : null,
+      delta: next && next.days <= 3 ? t('kpi.next.delta') : null,
       deltaUp: true,
     },
   ];

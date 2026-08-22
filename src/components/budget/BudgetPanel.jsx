@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { formatDZD, useWideLayout, computeSpendPerCategory } from "../../hooks/useSubscriptions.js";
+import { formatCurrency, useWideLayout, computeSpendPerCategory } from "../../hooks/useSubscriptions.js";
 import { useStore } from "../../store/useStore.jsx";
+import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { Icon } from "../ui/Icon.jsx";
 
-function BudgetBar({ category, used, limit, animate, onEditLimit }) {
+function BudgetBar({ category, used, limit, animate, onEditLimit, currency }) {
+  const { t } = useLanguage();
   const percent = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
   const isOverspend = limit > 0 && used > limit;
   const isNearLimit = limit > 0 && !isOverspend && percent >= 90;
@@ -14,21 +17,21 @@ function BudgetBar({ category, used, limit, animate, onEditLimit }) {
         <div className="flex items-center gap-2">
           <div
             className="w-[26px] h-[26px] rounded-md flex items-center justify-center text-xs shrink-0"
-            style={{ background: `${category.color}18` }}
+            style={{ background: `${category.color}18`, color: category.color }}
           >
-            {category.icon}
+            <Icon name={category.icon} size={14} />
           </div>
           <span className="font-plex text-[10px] text-text">{category.label}</span>
         </div>
         <div
           className={`flex items-center gap-1.5 font-plex text-[9px] ${isOverspend ? "text-red" : isNearLimit ? "text-orange" : "text-text-faint"}`}
         >
-          {formatDZD(used)}{" "}
-          <span className="text-text-faint">/ {formatDZD(limit)}</span>
+          {formatCurrency(used, currency)}{" "}
+          <span className="text-text-faint">/ {formatCurrency(limit, currency)}</span>
           <button
             onClick={onEditLimit}
-            title="Modifier le budget"
-            aria-label={`Modifier le budget pour ${category.label}`}
+            title={t('budget.edit_title')}
+            aria-label={t('budget.edit_title')}
             className="bg-transparent border-none cursor-pointer text-text-faint px-[3px] py-px rounded-[3px] text-[10px] leading-none opacity-60 hover:opacity-100"
           >
             ✎
@@ -42,10 +45,10 @@ function BudgetBar({ category, used, limit, animate, onEditLimit }) {
         />
       </div>
       {isOverspend && (
-        <div className="font-plex text-[8px] text-red mt-1">● Budget dépassé</div>
+        <div className="font-plex text-[8px] text-red mt-1">{t('budget.over')}</div>
       )}
       {isNearLimit && (
-        <div className="font-plex text-[8px] text-orange mt-1">● Limite proche ({percent}%)</div>
+        <div className="font-plex text-[8px] text-orange mt-1">{t('budget.near', { percent: Math.round(percent) })}</div>
       )}
     </div>
   );
@@ -71,7 +74,8 @@ function StatCard({ label, value, sub, color }) {
 }
 
 export function BudgetPanel() {
-  const { subscriptions, budgetLimits, categories: CATEGORIES, setBudget, monthlyBudget, setMonthlyBudget } = useStore();
+  const { t } = useLanguage();
+  const { subscriptions, budgetLimits, categories: CATEGORIES, profile, monthlyBudget, setBudget, setMonthlyBudget } = useStore();
   const spent = computeSpendPerCategory(subscriptions);
   const totalSpent = Object.values(spent).reduce((a, b) => a + b, 0);
   const totalBudget = Object.values(budgetLimits).reduce((a, b) => a + b, 0);
@@ -139,18 +143,18 @@ export function BudgetPanel() {
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-        <div className="font-sans text-base font-semibold text-text">Budget mensuel</div>
+        <div className="font-sans text-base font-semibold text-text">{t('budget.title')}</div>
         <div
-          className={`ml-auto font-plex text-[9px] tracking-[1px] ${usageRate >= 90 ? "text-red" : "text-text-faint"}`}
+          className={`ms-auto font-plex text-[9px] tracking-[1px] ${usageRate >= 90 ? "text-red" : "text-text-faint"}`}
         >
-          {usageRate}% utilisé
+          {t('budget.used_rate', { rate: usageRate })}
         </div>
       </div>
 
       {/* Global monthly budget editor */}
       <div className="flex items-center gap-2 mb-5 px-3 py-2.5 bg-bg-3 border border-border-2 rounded-xl">
         <div className="flex-1 min-w-0">
-          <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-text-faint mb-0.5">Budget global du mois</div>
+          <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-text-faint mb-0.5">{t('budget.global')}</div>
           {editingMonthly ? (
             <div className="flex items-center gap-2">
               <input
@@ -164,28 +168,28 @@ export function BudgetPanel() {
                 placeholder="Ex: 5000"
                 className="flex-1 bg-bg border border-gold rounded-md px-2 py-[5px] font-sans text-sm text-text outline-none"
               />
-              <span className="font-plex text-[9px] text-text-faint">DZD</span>
+              <span className="font-plex text-[9px] text-text-faint">{profile.currency}</span>
               <button
                 onClick={commitMonthly}
                 className="bg-gold border-none rounded-[5px] px-2.5 py-1 font-plex text-[9px] font-semibold cursor-pointer shrink-0"
                 style={{ color: "#020d0d" }}
               >
-                OK
+                {t('budget.ok')}
               </button>
             </div>
           ) : (
             <div className="font-sans text-lg font-bold text-text leading-none">
               {monthlyBudget > 0 ? (
-                <>{formatDZD(monthlyBudget)} <span className="font-plex text-[9px] text-text-faint font-normal">DZD / mois</span></>
+                <>{formatCurrency(monthlyBudget, profile.currency)}</>
               ) : (
-                <span className="font-plex text-[10px] text-text-faint">Aucun budget défini</span>
+                <span className="font-plex text-[10px] text-text-faint">{t('budget.empty')}</span>
               )}
             </div>
           )}
         </div>
         <button
           onClick={startEditMonthly}
-          title="Modifier le budget mensuel"
+          title={t('budget.edit_title')}
           className="bg-transparent border border-border-2 rounded-lg p-1.5 cursor-pointer text-text-faint hover:border-border hover:text-text transition-all duration-200 shrink-0"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -207,12 +211,13 @@ export function BudgetPanel() {
                 used={spent[cat.key] || 0}
                 limit={budgetLimits[cat.key] || 0}
                 animate={animate}
+                currency={profile.currency}
                 onEditLimit={() => startEdit(cat.key, budgetLimits[cat.key] || 0)}
               />
               {editingKey === cat.key && (
                 <div className="flex items-center gap-2 -mt-2.5 mb-[18px] px-2.5 py-2 bg-bg-3 border border-border rounded-lg">
                   <span className="font-plex text-[9px] text-text-faint whitespace-nowrap">
-                    Budget {cat.label} :
+                    {t('budget.cat_label', { cat: cat.label })}
                   </span>
                   <input
                     ref={inputRef}
@@ -231,7 +236,7 @@ export function BudgetPanel() {
                     className="bg-gold border-none rounded-[5px] px-2.5 py-1 font-plex text-[9px] font-semibold cursor-pointer"
                     style={{ color: "#020d0d" }}
                   >
-                    OK
+                    {t('budget.ok')}
                   </button>
                 </div>
               )}
@@ -240,13 +245,13 @@ export function BudgetPanel() {
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 content-start">
-          <StatCard label="Total dépensé" value={formatDZD(totalSpent)} sub="DZD ce mois" color="var(--text)" />
-          <StatCard label="Budget total" value={effectiveBudget > 0 ? formatDZD(effectiveBudget) : "—"} sub="DZD alloué" color="var(--text)" />
-          <StatCard label="Économies" value={formatDZD(savedAmount)} sub="DZD en pause" color="var(--green)" />
+          <StatCard label={t('budget.stat.spent')} value={formatCurrency(totalSpent, profile.currency)} sub={t('budget.stat.spent_sub')} color="var(--text)" />
+          <StatCard label={t('budget.stat.total')} value={effectiveBudget > 0 ? formatCurrency(effectiveBudget, profile.currency) : "—"} sub={t('budget.stat.total_sub')} color="var(--text)" />
+          <StatCard label={t('budget.stat.saved')} value={formatCurrency(savedAmount, profile.currency)} sub={t('budget.stat.saved_sub')} color="var(--green)" />
           <StatCard
-            label="Taux utilisation"
+            label={t('budget.stat.rate')}
             value={`${usageRate}%`}
-            sub={usageRate >= 90 ? "⚠ Limite proche" : "dans le budget"}
+            sub={usageRate >= 90 ? t('budget.stat.rate_near') : t('budget.stat.rate_ok')}
             color={usageRate >= 90 ? "var(--red)" : "var(--text)"}
           />
         </div>

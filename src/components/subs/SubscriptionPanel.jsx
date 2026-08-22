@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../../store/useStore.jsx";
-import { formatDZD, daysUntil } from "../../hooks/useSubscriptions.js";
+import { formatCurrency, daysUntil } from "../../hooks/useSubscriptions.js";
 import { SubscriptionModal } from "../subscription/SubscriptionModal.jsx";
 import { cn } from "../../lib/utils.js";
+import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { Icon } from "../ui/Icon.jsx";
 
 function getCatInfo(categories, key) {
   const cat = categories.find((c) => c.key === key);
@@ -10,12 +12,13 @@ function getCatInfo(categories, key) {
 }
 
 function StatusBadge({ status }) {
+  const { t } = useLanguage();
   const cls = {
     active: "bg-[rgba(74,222,128,0.10)] text-green border border-[rgba(74,222,128,0.20)]",
     paused: "bg-[rgba(248,113,113,0.10)] text-red border border-[rgba(248,113,113,0.20)]",
     trial:  "bg-[rgba(45,212,191,0.10)] text-teal border border-[rgba(45,212,191,0.20)]",
   };
-  const labels = { active: "Actif", paused: "Pausé", trial: "Essai" };
+  const labels = { active: t('subs.status.active'), paused: t('subs.status.paused'), trial: t('subs.status.trial') };
 
   return (
     <div className={cn("font-plex text-[8px] tracking-[1px] uppercase px-2 py-[3px] rounded", cls[status])}>
@@ -47,17 +50,18 @@ function RenewalBar({ renewalDay, color }) {
   );
 }
 
-function SubscriptionCard({ sub, onClick, categories }) {
+function SubscriptionCard({ sub, onClick, categories, currency }) {
+  const { t } = useLanguage();
   const { color, label: catLabel } = getCatInfo(categories, sub.category);
-  const days = daysUntil(sub.renewalDay);
+  const days = daysUntil(sub);
   const isSoon = days <= 7;
 
   const renewalText =
     days === 0
-      ? "Renouvellement aujourd'hui"
+      ? t('subs.renewal.today')
       : days === 1
-        ? "Renouvellement demain"
-        : `Le ${sub.renewalDay} du mois — dans ${days}j`;
+        ? t('subs.renewal.tomorrow')
+        : t('subs.renewal.days', { day: sub.renewalDay, days: days });
 
   return (
     <div
@@ -66,12 +70,16 @@ function SubscriptionCard({ sub, onClick, categories }) {
       onClick={onClick}
     >
       {/* Top row */}
-      <div className="flex justify-between items-start mb-2.5">
+      <div className="flex items-start justify-between mb-4">
         <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
-          style={{ background: `${color}18` }}
+          className="w-11 h-11 rounded-[12px] flex items-center justify-center shadow-sm"
+          style={{
+            background: `linear-gradient(135deg, ${color}20, ${color}05)`,
+            color: color,
+            border: `1px solid ${color}10`,
+          }}
         >
-          {sub.icon}
+          <Icon name={sub.icon} size={22} />
         </div>
         <StatusBadge status={sub.status} />
       </div>
@@ -88,9 +96,8 @@ function SubscriptionCard({ sub, onClick, categories }) {
       {/* Amount */}
       <div className="flex items-baseline gap-[5px]">
         <span className="font-sans text-[22px] font-bold text-text">
-          {formatDZD(sub.amount)}
+          {formatCurrency(sub.amount, currency)}
         </span>
-        <span className="font-plex text-[9px] text-text-faint">DZD/mois</span>
       </div>
 
       {/* Renewal date */}
@@ -107,8 +114,9 @@ function SubscriptionCard({ sub, onClick, categories }) {
 }
 
 function CategoryTabs({ activeTab, onChange, categories }) {
+  const { t } = useLanguage();
   const tabs = [
-    { value: "all", label: "Tous" },
+    { value: "all", label: t('subs.tabs.all') },
     ...categories.map((c) => ({ value: c.key, label: c.label })),
   ];
 
@@ -136,7 +144,8 @@ function CategoryTabs({ activeTab, onChange, categories }) {
 }
 
 export function SubscriptionPanel() {
-  const { subscriptions, categories } = useStore();
+  const { t } = useLanguage();
+  const { subscriptions, categories, profile } = useStore();
   const [activeTab, setActiveTab] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSub, setModalSub] = useState(null);
@@ -154,8 +163,8 @@ export function SubscriptionPanel() {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-        <div className="font-sans text-base font-semibold text-text">Mes Abonnements</div>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="font-sans text-base font-semibold text-text">{t('subs.title')}</div>
+        <div className="ms-auto flex items-center gap-3">
           <div className="font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">
             {filtered.length} / {subscriptions.length}
           </div>
@@ -164,7 +173,7 @@ export function SubscriptionPanel() {
             className="font-plex text-[9px] tracking-[1px] uppercase px-3 py-[5px] rounded-md cursor-pointer bg-gold border border-gold font-semibold"
             style={{ color: "#020d0d" }}
           >
-            + Ajouter
+            {t('subs.add')}
           </button>
         </div>
       </div>
@@ -178,6 +187,7 @@ export function SubscriptionPanel() {
             sub={sub}
             onClick={() => openEdit(sub)}
             categories={categories}
+            currency={profile.currency}
           />
         ))}
       </div>
@@ -187,8 +197,8 @@ export function SubscriptionPanel() {
         <div className="text-center py-10 flex flex-col items-center gap-3">
           <div className="font-plex text-[10px] tracking-[1.5px] uppercase text-text-faint">
             {activeTab === "all"
-              ? "Aucun abonnement pour l'instant"
-              : "Aucun abonnement dans cette catégorie"}
+              ? t('subs.empty.all')
+              : t('subs.empty.cat')}
           </div>
           {activeTab === "all" && (
             <button
@@ -196,7 +206,7 @@ export function SubscriptionPanel() {
               className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-[7px] rounded-lg cursor-pointer bg-gold border border-gold font-semibold"
               style={{ color: "#020d0d" }}
             >
-              + Ajouter un abonnement
+              {t('subs.add_btn')}
             </button>
           )}
         </div>

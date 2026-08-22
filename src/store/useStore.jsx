@@ -7,7 +7,7 @@ import { CATEGORIES as defaultCategories } from "../data/subscriptions.js";
 
 const StoreContext = createContext(null);
 
-const DEFAULT_PROFILE = { name: "User", initials: "U" };
+const DEFAULT_PROFILE = { name: "User", initials: "U", currency: "DZD", avatarUrl: "", language: "" };
 
 export function StoreProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -52,7 +52,13 @@ export function StoreProvider({ children }) {
       } else {
         // Initialize new user document
         setDoc(userDocRef, {
-          profile: { name: user.displayName || "User", initials: (user.displayName || "User").charAt(0) },
+          profile: { 
+            name: user.displayName || "User", 
+            initials: (user.displayName || "User").charAt(0),
+            currency: "DZD",
+            avatarUrl: "",
+            language: ""
+          },
           budgetLimits: {},
           categories: defaultCategories,
           monthlyBudget: 0

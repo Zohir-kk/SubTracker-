@@ -25,7 +25,7 @@ export function AskSubDz() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? 'Fermer le chat AI' : 'Ouvrir le chat SubDz AI'}
-        className="fixed bottom-5 right-5 w-14 h-14 rounded-full border-none bg-gold text-[#020d0d] cursor-pointer shadow-[0_4px_20px_rgba(45,212,191,0.45)] hover:shadow-[0_6px_28px_rgba(45,212,191,0.6)] hover:scale-105 flex items-center justify-center z-[250] transition-all duration-200"
+        className="fixed bottom-5 end-5 w-14 h-14 rounded-full border-none bg-gold text-[#020d0d] cursor-pointer shadow-[0_4px_20px_rgba(45,212,191,0.45)] hover:shadow-[0_6px_28px_rgba(45,212,191,0.6)] hover:scale-105 flex items-center justify-center z-[250] transition-all duration-200"
       >
         {open ? (
           // X icon when open

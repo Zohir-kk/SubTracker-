@@ -10,7 +10,7 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
   }, [messages]);
 
   return (
-    <div className="fixed bottom-[88px] right-5 w-[360px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-120px)] bg-bg-2 border border-border rounded-[20px] shadow-card shadow-gold flex flex-col overflow-hidden z-[240]">
+    <div className="fixed bottom-[88px] end-5 w-[360px] max-w-[calc(100vw-32px)] h-[520px] max-h-[calc(100vh-120px)] bg-bg-2 border border-border rounded-[20px] shadow-card shadow-gold flex flex-col overflow-hidden z-[240]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-border-2 bg-bg-3 shrink-0">
         <div className="flex items-center gap-2">
