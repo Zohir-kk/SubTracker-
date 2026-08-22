@@ -7,6 +7,7 @@ import {
   sendPasswordResetEmail 
 } from "firebase/auth";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
+import { useLanguage } from "../../providers/LanguageProvider.jsx";
 
 export function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +19,8 @@ export function AuthScreen() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const { t } = useLanguage();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -27,7 +30,7 @@ export function AuthScreen() {
     try {
       if (isResetting) {
         await sendPasswordResetEmail(auth, email);
-        setMessage("Un lien de réinitialisation a été envoyé à votre adresse email.");
+        setMessage(t('auth.reset_sent'));
         setIsResetting(false); // Switch back to login view after sending
       } else if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
@@ -38,13 +41,13 @@ export function AuthScreen() {
     } catch (err) {
       console.error(err);
       if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-         setError("Email ou mot de passe incorrect.");
+         setError(t('auth.error.invalid'));
       } else if (err.code === "auth/email-already-in-use") {
-         setError("Cette adresse email est déjà utilisée.");
+         setError(t('auth.error.in_use'));
       } else if (err.code === "auth/too-many-requests") {
-         setError("Trop de tentatives. Veuillez réessayer plus tard.");
+         setError(t('auth.error.too_many'));
       } else {
-         setError("Une erreur est survenue. Veuillez vérifier vos informations.");
+         setError(t('auth.error.default'));
       }
     } finally {
       setLoading(false);
@@ -66,12 +69,12 @@ export function AuthScreen() {
             </svg>
           </div>
           <h2 className="font-playfair text-2xl font-bold text-text mb-1">
-            {isResetting ? "Réinitialiser" : isLogin ? "Bon retour" : "Créer un compte"}
+            {isResetting ? t('auth.title.reset') : isLogin ? t('auth.title.login') : t('auth.title.register')}
           </h2>
           <p className="font-sans text-sm text-text-faint">
             {isResetting 
-              ? "Entrez votre email pour recevoir un lien de réinitialisation." 
-              : isLogin ? "Connectez-vous pour gérer vos abonnements." : "Rejoignez SubDz pour suivre vos dépenses."}
+              ? t('auth.subtitle.reset') 
+              : isLogin ? t('auth.subtitle.login') : t('auth.subtitle.register')}
           </p>
         </div>
 
@@ -92,15 +95,15 @@ export function AuthScreen() {
 
           {!isLogin && !isResetting && (
             <div className="space-y-1.5">
-              <label className="block text-xs font-sans font-medium text-text-faint ml-1">Nom</label>
+              <label className="block text-xs font-sans font-medium text-text-faint ms-1">{t('auth.label.name')}</label>
               <div className="relative">
-                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-faint/50" />
+                <User size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-text-faint/50" />
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-bg border border-border-2 rounded-xl font-sans text-sm text-text focus:outline-none focus:border-gold transition-colors"
+                  className="w-full h-11 ps-10 pe-4 bg-bg border border-border-2 rounded-xl font-sans text-sm text-text focus:outline-none focus:border-gold transition-colors"
                   placeholder="Zohir K."
                 />
               </div>
@@ -108,15 +111,15 @@ export function AuthScreen() {
           )}
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-sans font-medium text-text-faint ml-1">Email</label>
+            <label className="block text-xs font-sans font-medium text-text-faint ms-1">{t('auth.label.email')}</label>
             <div className="relative">
-              <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-faint/50" />
+              <Mail size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-text-faint/50" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-11 pl-10 pr-4 bg-bg border border-border-2 rounded-xl font-sans text-sm text-text focus:outline-none focus:border-gold transition-colors"
+                className="w-full h-11 ps-10 pe-4 bg-bg border border-border-2 rounded-xl font-sans text-sm text-text focus:outline-none focus:border-gold transition-colors"
                 placeholder="nom@exemple.com"
               />
             </div>
@@ -124,8 +127,8 @@ export function AuthScreen() {
 
           {!isResetting && (
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between ml-1">
-                <label className="block text-xs font-sans font-medium text-text-faint">Mot de passe</label>
+              <div className="flex items-center justify-between ms-1">
+                <label className="block text-xs font-sans font-medium text-text-faint">{t('auth.label.password')}</label>
                 {isLogin && (
                   <button
                     type="button"
@@ -136,18 +139,18 @@ export function AuthScreen() {
                     }}
                     className="text-[10px] font-sans text-text-faint hover:text-gold transition-colors"
                   >
-                    Oublié ?
+                    {t('auth.forgot')}
                   </button>
                 )}
               </div>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-faint/50" />
+                <Lock size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-text-faint/50" />
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 bg-bg border border-border-2 rounded-xl font-sans text-sm text-text focus:outline-none focus:border-gold transition-colors"
+                  className="w-full h-11 ps-10 pe-4 bg-bg border border-border-2 rounded-xl font-sans text-sm text-text focus:outline-none focus:border-gold transition-colors"
                   placeholder="••••••••"
                 />
               </div>
@@ -159,7 +162,7 @@ export function AuthScreen() {
             disabled={loading}
             className="w-full h-11 mt-4 bg-gold hover:bg-gold-dim text-bg font-sans text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : isResetting ? "Envoyer le lien" : isLogin ? "Se connecter" : "S'inscrire"}
+            {loading ? <Loader2 size={16} className="animate-spin" /> : isResetting ? t('auth.action.reset') : isLogin ? t('auth.action.login') : t('auth.action.register')}
           </button>
 
           <div className="mt-6 text-center">
@@ -173,7 +176,7 @@ export function AuthScreen() {
                 }}
                 className="text-xs font-sans text-text-faint hover:text-gold transition-colors"
               >
-                Retour à la connexion
+                {t('auth.link.back')}
               </button>
             ) : (
               <button
@@ -185,7 +188,7 @@ export function AuthScreen() {
                 }}
                 className="text-xs font-sans text-text-faint hover:text-gold transition-colors"
               >
-                {isLogin ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"}
+                {isLogin ? t('auth.link.register') : t('auth.link.login')}
               </button>
             )}
           </div>

@@ -14,7 +14,7 @@ import { daysUntil } from "../lib/utils.js";
 // Re-export utilities from lib/utils.js so components that
 // currently import from hooks don't need to change their imports
 export {
-  formatDZD,
+  formatCurrency,
   daysUntil,
   renewalMonth,
   computeSpendPerCategory,
@@ -80,7 +80,7 @@ export function useKPI() {
   const savings = paused.reduce((sum, s) => sum + s.amount, 0);
 
   const withDays = active
-    .map((s) => ({ ...s, days: daysUntil(s.renewalDay) }))
+    .map((s) => ({ ...s, days: daysUntil(s) }))
     .sort((a, b) => a.days - b.days);
   const next = withDays[0];
 

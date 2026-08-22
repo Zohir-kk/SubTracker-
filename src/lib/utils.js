@@ -5,19 +5,35 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDZD(amount) {
-  return new Intl.NumberFormat("fr-DZ").format(amount);
+export function formatCurrency(amount, currencyCode = "DZD") {
+  // Use French locale to get space separators like 1 000,00 but format it as currency
+  return new Intl.NumberFormat("fr-DZ", {
+    style: "currency",
+    currency: currencyCode,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
-export function daysUntil(day) {
+export function daysUntil(sub) {
+  if (!sub || !sub.renewalDay) return 0;
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let target = new Date(today.getFullYear(), today.getMonth(), day);
-  if (target < today) {
-    target = new Date(today.getFullYear(), today.getMonth() + 1, day);
+
+  if (sub.billingCycle === "yearly" && sub.renewalMonth) {
+    const currentYearDay = new Date(now.getFullYear(), sub.renewalMonth - 1, sub.renewalDay);
+    if (currentYearDay >= now) {
+      return Math.ceil((currentYearDay - now) / (1000 * 60 * 60 * 24));
+    }
+    const nextYearDay = new Date(now.getFullYear() + 1, sub.renewalMonth - 1, sub.renewalDay);
+    return Math.ceil((nextYearDay - now) / (1000 * 60 * 60 * 24));
+  } else {
+    const currentMonthDay = new Date(now.getFullYear(), now.getMonth(), sub.renewalDay);
+    if (currentMonthDay >= now) {
+      return Math.ceil((currentMonthDay - now) / (1000 * 60 * 60 * 24));
+    }
+    const nextMonthDay = new Date(now.getFullYear(), now.getMonth() + 1, sub.renewalDay);
+    return Math.ceil((nextMonthDay - now) / (1000 * 60 * 60 * 24));
   }
-  const diffTime = target.getTime() - today.getTime();
-  return Math.round(diffTime / (1000 * 60 * 60 * 24));
 }
 
 export function renewalMonth(day) {
@@ -31,13 +47,14 @@ export function renewalMonth(day) {
 }
 
 export function computeSpendPerCategory(subscriptions) {
-  const totals = {};
-  subscriptions
-    .filter((s) => s.status === "active" || s.status === "trial")
-    .forEach((s) => {
-      totals[s.category] = (totals[s.category] || 0) + s.amount;
-    });
-  return totals;
+  const result = {};
+  subscriptions.forEach((sub) => {
+    if (sub.status !== "active") return;
+    if (!result[sub.category]) result[sub.category] = 0;
+    const normalizedAmount = sub.billingCycle === "yearly" ? sub.amount / 12 : sub.amount;
+    result[sub.category] += normalizedAmount;
+  });
+  return result;
 }
 
 export function computeBreakdown(subscriptions, categories) {

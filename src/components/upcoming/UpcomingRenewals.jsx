@@ -1,7 +1,10 @@
 import { useStore } from "../../store/useStore.jsx";
-import { formatDZD, daysUntil, renewalMonth } from "../../hooks/useSubscriptions.js";
+import { formatCurrency, daysUntil, renewalMonth } from "../../hooks/useSubscriptions.js";
+import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { Icon } from "../ui/Icon.jsx";
 
-function UpcomingItem({ sub, days, categories }) {
+function UpcomingItem({ sub, days, categories, currency }) {
+  const { t } = useLanguage();
   const isSoon = days <= 7;
   const cat = categories.find((c) => c.key === sub.category);
   const color = cat?.color ?? "var(--teal)";
@@ -45,20 +48,20 @@ function UpcomingItem({ sub, days, categories }) {
       {/* Amount */}
       <div className="text-right shrink-0">
         <span className="font-sans text-base font-semibold text-text">
-          {formatDZD(sub.amount)}
+          {formatCurrency(sub.amount, currency)}
         </span>
-        <span className="font-dm text-[8px] text-text-faint ml-[3px]">DZD</span>
       </div>
     </div>
   );
 }
 
 export function UpcomingRenewals() {
-  const { subscriptions, categories } = useStore();
+  const { t } = useLanguage();
+  const { subscriptions, categories, profile } = useStore();
 
   const upcoming = subscriptions
     .filter((s) => s.status === "active" || s.status === "trial")
-    .map((s) => ({ ...s, days: daysUntil(s.renewalDay) }))
+    .map((s) => ({ ...s, days: daysUntil(s) }))
     .sort((a, b) => a.days - b.days);
 
   return (
@@ -66,17 +69,17 @@ export function UpcomingRenewals() {
       <div className="flex items-center gap-2 mb-1">
         <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
         <div className="font-sans text-base font-semibold text-text">
-          Prochains renouvellements
+          {t('upcoming.title')}
         </div>
-        <div className="ml-auto font-dm text-[9px] tracking-[1.5px] uppercase text-text-faint">
-          {upcoming.length} abonnements
+        <div className="ms-auto font-dm text-[9px] tracking-[1.5px] uppercase text-text-faint">
+          {t('upcoming.count', { count: upcoming.length })}
         </div>
       </div>
 
       <div>
         {upcoming.map((sub, index) => (
           <div key={sub.id} className={index === upcoming.length - 1 ? "[&>div]:border-b-0" : ""}>
-            <UpcomingItem sub={sub} days={sub.days} categories={categories} />
+            <UpcomingItem sub={sub} days={sub.days} categories={categories} currency={profile.currency} />
           </div>
         ))}
       </div>

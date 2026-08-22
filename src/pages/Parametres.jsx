@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../store/useStore.jsx";
 import { cn } from "../lib/utils.js";
+import { useLanguage } from "../providers/LanguageProvider.jsx";
 
-const EMOJI_GRID = [
-  "📡", "📶", "🌐", "☁️", "🔌",
-  "🎬", "🎭", "🎵", "🎮", "📺",
-  "🚇", "🚌", "🚗", "✈️", "🚲",
-  "💼", "📰", "📚", "🏋️", "🏥",
-  "🛒", "🍔", "☕", "🎁", "💡",
-];
+import { Icon } from "../components/ui/Icon.jsx";
+import { IconPicker } from "../components/ui/IconPicker.jsx";
 
 const COLOR_PALETTE = [
   "var(--teal)",
@@ -44,26 +40,7 @@ function Field({ label, children }) {
   );
 }
 
-function EmojiPicker({ selected, onSelect }) {
-  return (
-    <div className="grid gap-1.5 mt-1.5 mb-2.5" style={{ gridTemplateColumns: "repeat(13, 36px)" }}>
-      {EMOJI_GRID.map((emoji) => (
-        <button
-          key={emoji}
-          onClick={() => onSelect(emoji)}
-          className={cn(
-            "w-9 h-9 rounded-lg cursor-pointer text-lg flex items-center justify-center p-0 transition-all duration-150 border",
-            selected === emoji
-              ? "border-2 border-gold bg-gold-dim"
-              : "border border-border-2 bg-bg-3",
-          )}
-        >
-          {emoji}
-        </button>
-      ))}
-    </div>
-  );
-}
+
 
 function ColorPicker({ selected, onSelect }) {
   return (
@@ -85,13 +62,18 @@ function ColorPicker({ selected, onSelect }) {
 
 function ProfileSection() {
   const { profile, setProfile } = useStore();
+  const { t } = useLanguage();
   const [name, setName] = useState(profile.name || "");
   const [initials, setInitials] = useState(profile.initials || "");
+  const [currency, setCurrency] = useState(profile.currency || "DZD");
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || "");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setName(profile.name || "");
     setInitials(profile.initials || "");
+    setCurrency(profile.currency || "DZD");
+    setAvatarUrl(profile.avatarUrl || "");
   }, [profile]);
 
   const previewInitials =
@@ -101,7 +83,9 @@ function ProfileSection() {
 
   const isDirty =
     name.trim() !== profile.name ||
-    initials.trim().toUpperCase().slice(0, 3) !== profile.initials;
+    initials.trim().toUpperCase().slice(0, 3) !== profile.initials ||
+    currency !== (profile.currency || "DZD") ||
+    avatarUrl !== (profile.avatarUrl || "");
 
   function handleSave() {
     const trimmedName = name.trim();
@@ -109,43 +93,99 @@ function ProfileSection() {
     const trimmedInitials =
       initials.trim().toUpperCase().slice(0, 3) ||
       trimmedName.slice(0, 2).toUpperCase();
-    setProfile({ name: trimmedName, initials: trimmedInitials });
+    setProfile({ 
+      name: trimmedName, 
+      initials: trimmedInitials,
+      currency,
+      avatarUrl
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  function handleAvatarUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const size = 150;
+        canvas.width = size;
+        canvas.height = size;
+        
+        // cover crop
+        const ratio = Math.max(size / img.width, size / img.height);
+        const x = (size - img.width * ratio) / 2;
+        const y = (size - img.height * ratio) / 2;
+        ctx.drawImage(img, 0, 0, img.width, img.height, x, y, img.width * ratio, img.height * ratio);
+        
+        setAvatarUrl(canvas.toDataURL("image/jpeg", 0.8));
+        setSaved(false);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   const canSave = name.trim() && isDirty;
 
   return (
-    <Section title="Profil utilisateur">
-      <div className="flex justify-center mb-7">
+    <Section title={t('settings.profile.title')}>
+      <div className="flex justify-center mb-7 relative group w-max mx-auto">
         <div
-          className="w-[72px] h-[72px] rounded-full bg-gold flex items-center justify-center font-plex text-xl font-semibold shadow-gold"
-          style={{ color: "#020d0d" }}
+          className="w-[72px] h-[72px] rounded-full flex items-center justify-center font-plex text-xl font-semibold overflow-hidden border-2 border-gold"
+          style={{ background: "var(--gold)", color: "#020d0d" }}
         >
-          {previewInitials}
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            previewInitials
+          )}
         </div>
+        <label className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+          <span className="text-white text-xs">Edit</span>
+          <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        </label>
       </div>
 
       <div className="flex flex-col gap-4 max-w-[400px]">
-        <Field label="Nom affiché">
+        <Field label={t('settings.profile.name')}>
           <input
             value={name}
             onChange={(e) => { setName(e.target.value); setSaved(false); }}
-            placeholder="ex: Zohir K."
+            placeholder={t('settings.profile.name_ph')}
             className={inputCls}
           />
         </Field>
 
-        <Field label="Initiales (2–3 caractères)">
-          <input
-            value={initials}
-            onChange={(e) => { setInitials(e.target.value.toUpperCase().slice(0, 3)); setSaved(false); }}
-            placeholder="ex: ZK"
-            maxLength={3}
-            className={cn(inputCls, "uppercase tracking-[3px]")}
-          />
-        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label={t('settings.profile.initials')}>
+            <input
+              value={initials}
+              onChange={(e) => { setInitials(e.target.value.toUpperCase().slice(0, 3)); setSaved(false); }}
+              placeholder={t('settings.profile.initials_ph')}
+              maxLength={3}
+              className={cn(inputCls, "uppercase tracking-[3px]")}
+            />
+          </Field>
+
+          <Field label="Currency">
+            <select
+              value={currency}
+              onChange={(e) => { setCurrency(e.target.value); setSaved(false); }}
+              className={cn(inputCls, "cursor-pointer appearance-none")}
+            >
+              <option value="DZD">DZD - Algerian Dinar</option>
+              <option value="USD">USD - US Dollar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="GBP">GBP - British Pound</option>
+              <option value="CAD">CAD - Canadian Dollar</option>
+            </select>
+          </Field>
+        </div>
 
         <div className="flex items-center gap-3 mt-1">
           <button
@@ -158,11 +198,11 @@ function ProfileSection() {
               color: canSave ? "#020d0d" : "var(--text-faint)",
             }}
           >
-            Enregistrer
+            {t('settings.profile.save')}
           </button>
           {saved && (
             <span className="font-plex text-[9px] tracking-[1px] text-gold uppercase">
-              Sauvegardé
+              {t('settings.profile.saved')}
             </span>
           )}
         </div>
@@ -175,6 +215,7 @@ const EMPTY_NEW = { label: "", icon: "", color: COLOR_PALETTE[0] };
 
 function CategoriesSection() {
   const { categories, subscriptions, addCategory, updateCategory, removeCategory, remove } = useStore();
+  const { t } = useLanguage();
   const [form, setForm] = useState(EMPTY_NEW);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
@@ -216,11 +257,11 @@ function CategoriesSection() {
   function handleAdd() {
     const label = form.label.trim();
     const icon = form.icon.trim();
-    if (!label) { setError("Le nom est requis."); return; }
-    if (!icon) { setError("L'icône est requise."); return; }
+    if (!label) { setError(t('settings.cat.err_name')); return; }
+    if (!icon) { setError(t('settings.cat.err_icon')); return; }
     const key = slugify(label);
-    if (!key) { setError("Nom invalide."); return; }
-    if (categories.find((c) => c.key === key)) { setError("Cette catégorie existe déjà."); return; }
+    if (!key) { setError(t('settings.cat.err_invalid')); return; }
+    if (categories.find((c) => c.key === key)) { setError(t('settings.cat.err_exists')); return; }
     addCategory({ key, label, icon, color: form.color });
     setForm(EMPTY_NEW);
     setOpen(false);
@@ -228,7 +269,7 @@ function CategoriesSection() {
   }
 
   return (
-    <Section title="Catégories">
+    <Section title={t('settings.cat.title')}>
       <div className="flex flex-col gap-2 mb-4">
         {categories.map((cat) => {
           const affected = subsByCategory[cat.key] || [];
@@ -248,14 +289,14 @@ function CategoriesSection() {
                 )}
               >
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: cat.color }} />
-                <span className="text-base leading-none shrink-0">{cat.icon}</span>
+                <span className="shrink-0 text-text-faint"><Icon name={cat.icon} size={16} /></span>
                 <span className="font-plex text-[10px] tracking-[1px] text-text flex-1">{cat.label}</span>
                 <span className="font-plex text-[8px] tracking-[1px] text-text-faint bg-bg-3 px-1.5 py-0.5 rounded">
                   {cat.key}
                 </span>
                 {affected.length > 0 && (
                   <span className="font-plex text-[8px] tracking-[1px] uppercase text-text-faint px-2 py-[3px] rounded-md border border-border-2 shrink-0">
-                    En usage
+                    {t('settings.cat.in_use')}
                   </span>
                 )}
                 <button
@@ -264,7 +305,7 @@ function CategoriesSection() {
                     "bg-transparent border border-transparent rounded-md cursor-pointer text-[13px] leading-none px-1.5 py-[3px] shrink-0 transition-all duration-150 hover:text-gold hover:border-gold",
                     isEditing ? "text-gold" : "text-text-faint",
                   )}
-                  title={isEditing ? "Annuler" : "Modifier"}
+                  title={isEditing ? t('settings.cat.cancel') : t('settings.cat.edit')}
                 >
                   ✏
                 </button>
@@ -274,7 +315,7 @@ function CategoriesSection() {
                     "bg-transparent border border-transparent rounded-md cursor-pointer text-base leading-none px-1.5 py-0.5 font-plex shrink-0 transition-all duration-150 hover:text-red hover:border-red",
                     isPending ? "text-red" : "text-text-faint",
                   )}
-                  title={isPending ? "Annuler" : "Supprimer"}
+                  title={isPending ? t('settings.cat.cancel') : t('settings.cat.delete')}
                 >
                   ×
                 </button>
@@ -283,17 +324,17 @@ function CategoriesSection() {
               {/* Edit panel */}
               {isEditing && (
                 <div className="bg-bg border border-gold border-t-0 rounded-[0_0_10px_10px] p-3.5">
-                  <Field label="Nom">
+                  <Field label={t('settings.cat.name')}>
                     <input
                       value={editForm.label || ""}
                       onChange={(e) => setEditForm((f) => ({ ...f, label: e.target.value }))}
                       className={cn(inputCls, "mb-2.5")}
                     />
                   </Field>
-                  <Field label="Icône">
-                    <EmojiPicker selected={editForm.icon} onSelect={(emoji) => setEditForm((f) => ({ ...f, icon: emoji }))} />
+                  <Field label={t('settings.cat.icon')}>
+                    <IconPicker selected={editForm.icon} onSelect={(icon) => setEditForm((f) => ({ ...f, icon }))} />
                   </Field>
-                  <Field label="Couleur">
+                  <Field label={t('settings.cat.color')}>
                     <ColorPicker selected={editForm.color} onSelect={(c) => setEditForm((f) => ({ ...f, color: c }))} />
                   </Field>
                   <div className="flex gap-2">
@@ -307,13 +348,13 @@ function CategoriesSection() {
                         color: editForm.label?.trim() ? "#020d0d" : "var(--text-faint)",
                       }}
                     >
-                      Enregistrer
+                      {t('settings.profile.save')}
                     </button>
                     <button
                       onClick={cancelEdit}
                       className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
                     >
-                      Annuler
+                      {t('settings.cat.cancel')}
                     </button>
                   </div>
                 </div>
@@ -323,12 +364,12 @@ function CategoriesSection() {
               {isPending && (
                 <div className="bg-bg border border-red border-t-0 rounded-[0_0_10px_10px] px-3.5 py-3">
                   <div className="font-plex text-[9px] text-red tracking-[1px] uppercase mb-2">
-                    {affected.length} abonnement{affected.length > 1 ? "s" : ""} sera{affected.length > 1 ? "ont" : ""} supprimé{affected.length > 1 ? "s" : ""}
+                    {affected.length} {t('settings.cat.delete_confirm')}
                   </div>
                   <div className="flex flex-col gap-1 mb-3">
                     {affected.map((s) => (
-                      <div key={s.id} className="flex items-center gap-2">
-                        <span className="text-xs">{s.icon}</span>
+                      <div key={s.id} className="flex items-center gap-2 text-text-faint">
+                        <Icon name={s.icon} size={12} />
                         <span className="font-plex text-[9px] text-text-muted">{s.name}</span>
                       </div>
                     ))}
@@ -339,13 +380,13 @@ function CategoriesSection() {
                       className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-[7px] rounded-[7px] cursor-pointer bg-red border-none font-semibold"
                       style={{ color: "#fff" }}
                     >
-                      Supprimer tout
+                      {t('settings.cat.delete_all')}
                     </button>
                     <button
                       onClick={() => setPendingDelete(null)}
                       className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-[7px] rounded-[7px] cursor-pointer bg-transparent border border-border-2 text-text-faint"
                     >
-                      Annuler
+                      {t('settings.cat.cancel')}
                     </button>
                   </div>
                 </div>
@@ -358,18 +399,17 @@ function CategoriesSection() {
       {/* Add form / trigger */}
       {open ? (
         <div className="p-3.5 bg-bg border border-border rounded-[10px]">
-          <Field label="Nom">
+          <Field label={t('settings.cat.name')}>
             <input
               value={form.label}
               onChange={(e) => { setForm((f) => ({ ...f, label: e.target.value })); setError(""); }}
-              placeholder="ex: Musique"
               className={cn(inputCls, "mb-2.5")}
             />
           </Field>
-          <Field label="Icône">
-            <EmojiPicker selected={form.icon} onSelect={(emoji) => { setForm((f) => ({ ...f, icon: emoji })); setError(""); }} />
+          <Field label={t('settings.cat.icon')}>
+            <IconPicker selected={form.icon} onSelect={(icon) => { setForm((f) => ({ ...f, icon })); setError(""); }} />
           </Field>
-          <Field label="Couleur">
+          <Field label={t('settings.cat.color')}>
             <ColorPicker selected={form.color} onSelect={(c) => setForm((f) => ({ ...f, color: c }))} />
           </Field>
 
@@ -383,13 +423,13 @@ function CategoriesSection() {
               className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg cursor-pointer bg-gold border-none font-semibold"
               style={{ color: "#020d0d" }}
             >
-              Ajouter
+              {t('settings.cat.add')}
             </button>
             <button
               onClick={() => { setOpen(false); setForm(EMPTY_NEW); setError(""); }}
               className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
             >
-              Annuler
+              {t('settings.cat.cancel')}
             </button>
           </div>
         </div>
@@ -398,7 +438,7 @@ function CategoriesSection() {
           onClick={() => setOpen(true)}
           className="flex items-center gap-2 font-plex text-[9px] tracking-[1px] uppercase px-4 py-[9px] rounded-lg cursor-pointer bg-transparent border border-dashed border-border text-text-faint hover:border-gold hover:text-gold transition-all duration-200 w-full justify-center"
         >
-          + Nouvelle catégorie
+          + {t('settings.cat.new')}
         </button>
       )}
     </Section>
@@ -406,14 +446,15 @@ function CategoriesSection() {
 }
 
 export function Parametres() {
+  const { t } = useLanguage();
   return (
     <div className="p-2.5 md:p-4 overflow-y-auto">
       <div className="mb-5">
         <div className="font-sans text-[22px] font-bold text-text mb-1">
-          Paramètres
+          {t('settings.title')}
         </div>
         <div className="font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">
-          Préférences & configuration
+          {t('settings.subtitle')}
         </div>
       </div>
 

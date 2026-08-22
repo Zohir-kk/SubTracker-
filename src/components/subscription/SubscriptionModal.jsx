@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "../../store/useStore.jsx";
 import { cn } from "../../lib/utils.js";
+import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { IconPicker } from "../ui/IconPicker.jsx";
+import { useToast } from "../ui/Toast.jsx";
 
 const NEW_CAT_KEY = "__new__";
 
@@ -21,7 +25,9 @@ const EMPTY_FORM = {
   provider: "",
   category: "streaming",
   amount: "",
+  billingCycle: "monthly",
   renewalDay: "",
+  renewalMonth: "",
   status: "active",
   startDate: "",
 };
@@ -38,7 +44,7 @@ function Field({ label, error, children }) {
         )}
       >
         {label}
-        {error && <span className="ml-1.5 italic">— {error}</span>}
+        {error && <span className="ms-1.5 italic">— {error}</span>}
       </div>
       {children}
     </div>
@@ -59,19 +65,22 @@ function FormInput({ error, className, ...props }) {
 }
 
 function FormSelect({ children, className, ...props }) {
+  const { language } = useLanguage();
+  const isRtl = language === 'ar';
   return (
     <select
       {...props}
       className={cn(
         inputBase,
-        "border-border-2 focus:border-gold cursor-pointer appearance-none pr-8",
+        "border-border-2 focus:border-gold cursor-pointer appearance-none",
+        isRtl ? "ps-8" : "pe-8",
         className,
       )}
       style={{
         backgroundImage:
           "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
         backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 10px center",
+        backgroundPosition: isRtl ? "left 10px center" : "right 10px center",
       }}
     >
       {children}
@@ -80,6 +89,7 @@ function FormSelect({ children, className, ...props }) {
 }
 
 export function SubscriptionModal({ isOpen, sub, onClose }) {
+  const { t } = useLanguage();
   const { subscriptions, add, update, remove, categories, addCategory, updateCategory, removeCategory } = useStore();
   const [form, setForm] = useState(EMPTY_FORM);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -93,6 +103,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
   const [editCatLabel, setEditCatLabel] = useState("");
   const [editCatIcon, setEditCatIcon] = useState("");
   const [editCatColor, setEditCatColor] = useState(COLOR_PALETTE[0]);
+  const { addToast } = useToast();
 
   const isEdit = Boolean(sub);
 
@@ -105,7 +116,9 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
             provider: sub.provider || "",
             category: sub.category,
             amount: String(sub.amount),
+            billingCycle: sub.billingCycle || "monthly",
             renewalDay: String(sub.renewalDay),
+            renewalMonth: sub.renewalMonth ? String(sub.renewalMonth) : "",
             status: sub.status,
             startDate: sub.startDate || "",
           }
@@ -144,11 +157,15 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
 
   function validate() {
     const errs = {};
-    if (!form.name.trim()) errs.name = "requis";
+    if (!form.name.trim()) errs.name = t('modal.sub.err_req');
     const amt = Number(form.amount);
-    if (!form.amount || isNaN(amt) || amt <= 0) errs.amount = "invalide";
+    if (!form.amount || isNaN(amt) || amt <= 0) errs.amount = t('modal.sub.err_inv');
     const day = Number(form.renewalDay);
-    if (!form.renewalDay || isNaN(day) || day < 1 || day > 31) errs.renewalDay = "doit être entre 1 et 31";
+    if (!form.renewalDay || isNaN(day) || day < 1 || day > 31) errs.renewalDay = t('modal.sub.err_ren');
+    if (form.billingCycle === "yearly") {
+      const month = Number(form.renewalMonth);
+      if (!form.renewalMonth || isNaN(month) || month < 1 || month > 12) errs.renewalMonth = "Invalid month";
+    }
     return errs;
   }
 
@@ -162,17 +179,27 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
       category: form.category,
       icon: cat?.icon ?? "⭐",
       amount: Number(form.amount),
+      billingCycle: form.billingCycle,
       renewalDay: Number(form.renewalDay),
+      renewalMonth: form.billingCycle === "yearly" ? Number(form.renewalMonth) : null,
       status: form.status,
       startDate: form.startDate,
     };
-    if (isEdit && sub) update(sub.id, payload);
-    else add(payload);
+    if (isEdit && sub) {
+      update(sub.id, payload);
+      addToast({ type: "success", message: t('toast.sub.updated') });
+    } else {
+      add(payload);
+      addToast({ type: "success", message: t('toast.sub.added') });
+    }
     onClose();
   }
 
   function handleDelete() {
-    if (sub) remove(sub.id);
+    if (sub) {
+      remove(sub.id);
+      addToast({ type: "info", message: t('toast.sub.deleted') });
+    }
     onClose();
   }
 
@@ -193,13 +220,8 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
     setNewCatColor(COLOR_PALETTE[0]);
   }
 
-  function handleBackdrop(e) {
-    if (e.target === e.currentTarget) onClose();
-  }
-
   return createPortal(
     <div
-      onClick={handleBackdrop}
       className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[1000] flex items-center justify-center p-4"
     >
       <div className="bg-bg-2 border border-border rounded-2xl p-6 w-full max-w-[460px] max-h-[90vh] overflow-y-auto">
@@ -207,11 +229,11 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
         <div className="flex items-center gap-2.5 mb-6">
           <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
           <div className="font-sans text-[17px] font-semibold text-text">
-            {isEdit ? "Modifier l'abonnement" : "Nouvel abonnement"}
+            {isEdit ? t('modal.sub.title_edit') : t('modal.sub.title_new')}
           </div>
           <button
             onClick={onClose}
-            className="ml-auto bg-transparent border-none cursor-pointer text-text-faint text-xl leading-none px-1.5 py-0.5 rounded"
+            className="ms-auto bg-transparent border-none cursor-pointer text-text-faint text-xl leading-none px-1.5 py-0.5 rounded"
           >
             ×
           </button>
@@ -219,7 +241,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
 
         {/* Form */}
         <div className="flex flex-col gap-3.5">
-          <Field label="Nom" error={errors.name}>
+          <Field label={t('modal.sub.name')} error={errors.name}>
             <FormInput
               value={form.name}
               onChange={(e) => setField("name", e.target.value)}
@@ -228,7 +250,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
             />
           </Field>
 
-          <Field label="Fournisseur">
+          <Field label={t('modal.sub.provider')}>
             <FormInput
               value={form.provider}
               onChange={(e) => setField("provider", e.target.value)}
@@ -237,45 +259,45 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
           </Field>
 
           <div className="grid grid-cols-2 gap-3.5">
-            <Field label="Catégorie">
+            <Field label={t('modal.sub.category')}>
               <FormSelect
                 value={showNewCat ? NEW_CAT_KEY : form.category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
               >
                 {categories.map((cat) => (
-                  <option key={cat.key} value={cat.key}>{cat.icon} {cat.label}</option>
+                  <option key={cat.key} value={cat.key}>{cat.label}</option>
                 ))}
-                <option value={NEW_CAT_KEY}>＋ Nouvelle catégorie</option>
+                <option value={NEW_CAT_KEY}>{t('modal.sub.cat_new')}</option>
               </FormSelect>
             </Field>
-            <Field label="Statut">
+            <Field label={t('modal.sub.status')}>
               <FormSelect value={form.status} onChange={(e) => setField("status", e.target.value)}>
-                <option value="active">Actif</option>
-                <option value="paused">Pausé</option>
-                <option value="trial">Essai</option>
+                <option value="active">{t('subs.status.active')}</option>
+                <option value="paused">{t('subs.status.paused')}</option>
+                <option value="trial">{t('subs.status.trial')}</option>
               </FormSelect>
             </Field>
           </div>
 
           {/* New category form */}
           {showNewCat && (
-            <div className="bg-bg-3 border border-border rounded-[10px] p-3.5 flex flex-col gap-2.5">
+            <div className="bg-bg-3 border border-border rounded-[10px] p-3.5 flex flex-col gap-3">
               <div className="font-plex text-[8px] tracking-[1.5px] uppercase text-gold mb-0.5">
-                Nouvelle catégorie
+                {t('settings.cat.new')}
               </div>
-              <div className="grid gap-2.5" style={{ gridTemplateColumns: "64px 1fr" }}>
-                <FormInput
-                  value={newCatIcon}
-                  onChange={(e) => setNewCatIcon(e.target.value)}
-                  placeholder="⭐"
-                  className="text-center text-lg"
-                />
-                <FormInput
-                  value={newCatLabel}
-                  onChange={(e) => setNewCatLabel(e.target.value)}
-                  placeholder="ex: Musique"
-                />
+              <FormInput
+                value={newCatLabel}
+                onChange={(e) => setNewCatLabel(e.target.value)}
+                placeholder={t('settings.cat.label_ph')}
+              />
+              
+              <div>
+                <div className="font-plex text-[10px] tracking-[1px] uppercase text-text-faint mb-2">
+                  {t('settings.cat.icon')}
+                </div>
+                <IconPicker selected={newCatIcon} onSelect={setNewCatIcon} />
               </div>
+
               <div className="flex gap-2 flex-wrap">
                 {COLOR_PALETTE.map((color) => (
                   <button
@@ -294,7 +316,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                   onClick={() => setShowNewCat(false)}
                   className="font-plex text-[9px] tracking-[1px] uppercase px-3 py-1.5 rounded-md cursor-pointer bg-transparent border border-border-2 text-text-faint"
                 >
-                  Annuler
+                  {t('settings.cat.cancel')}
                 </button>
                 <button
                   onClick={handleCreateCategory}
@@ -306,7 +328,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                     opacity: newCatLabel.trim() ? 1 : 0.4,
                   }}
                 >
-                  Créer
+                  {t('modal.sub.create')}
                 </button>
               </div>
             </div>
@@ -319,7 +341,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
               className="font-plex text-[8px] tracking-[1.5px] uppercase bg-transparent border-none cursor-pointer text-text-faint p-0 flex items-center gap-1.5"
             >
               <span className="text-[10px]">{showManageCats ? "▾" : "▸"}</span>
-              Gérer les catégories
+              {t('modal.sub.cat_manage')}
             </button>
 
             {showManageCats && (
@@ -342,15 +364,15 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                           className="w-[26px] h-[26px] rounded-md flex items-center justify-center text-[13px] shrink-0"
                           style={{ background: `${cat.color}18` }}
                         >
-                          {cat.icon}
+                          <Icon name={cat.icon} size={14} color="currentColor" />
                         </div>
                         <span className="font-plex text-[10px] text-text flex-1">{cat.label}</span>
                         {usedBy > 0 && (
-                          <span className="font-plex text-[8px] text-text-faint">{usedBy} abo.</span>
+                          <span className="font-plex text-[8px] text-text-faint">{t('modal.sub.cat_used', { count: usedBy })}</span>
                         )}
                         <button
                           onClick={() => isEditingThis ? setEditCatKey(null) : startEditCat(cat)}
-                          title={isEditingThis ? "Annuler" : "Modifier"}
+                          title={isEditingThis ? t('settings.cat.cancel') : t('settings.cat.edit')}
                           className={cn(
                             "bg-transparent border-none cursor-pointer text-xs leading-none px-1 py-0.5 rounded shrink-0",
                             isEditingThis ? "text-gold" : "text-text-faint",
@@ -360,7 +382,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                         </button>
                         <button
                           onClick={() => { if (canDelete) removeCategory(cat.key); }}
-                          title={canDelete ? "Supprimer" : `Utilisée par ${usedBy} abonnement(s)`}
+                          title={canDelete ? t('settings.cat.delete') : t('modal.sub.cat_used_by', { count: usedBy })}
                           className="bg-transparent border-none text-base leading-none px-1 py-0.5 rounded shrink-0"
                           style={{
                             cursor: canDelete ? "pointer" : "not-allowed",
@@ -374,18 +396,15 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
 
                       {isEditingThis && (
                         <div className="bg-bg-2 border border-gold border-t-0 rounded-[0_0_7px_7px] p-2.5 flex flex-col gap-2">
-                          <div className="grid gap-2" style={{ gridTemplateColumns: "48px 1fr" }}>
-                            <FormInput
-                              value={editCatIcon}
-                              onChange={(e) => setEditCatIcon(e.target.value)}
-                              placeholder="⭐"
-                              className="text-center text-base"
-                            />
+                          <div className="flex flex-col gap-2">
                             <FormInput
                               value={editCatLabel}
                               onChange={(e) => setEditCatLabel(e.target.value)}
-                              placeholder="Nom"
+                              placeholder={t('settings.cat.label_ph')}
                             />
+                            <div className="mt-1">
+                              <IconPicker selected={editCatIcon} onSelect={setEditCatIcon} />
+                            </div>
                           </div>
                           <div className="flex gap-1.5 flex-wrap">
                             {COLOR_PALETTE.map((c) => (
@@ -405,14 +424,14 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                               onClick={() => setEditCatKey(null)}
                               className="font-plex text-[8px] tracking-[1px] uppercase px-2.5 py-[5px] rounded-md cursor-pointer bg-transparent border border-border-2 text-text-faint"
                             >
-                              Annuler
+                              {t('settings.cat.cancel')}
                             </button>
                             <button
                               onClick={saveEditCat}
                               className="font-plex text-[8px] tracking-[1px] uppercase px-3 py-[5px] rounded-md cursor-pointer bg-gold border-none font-semibold"
                               style={{ color: "#020d0d", opacity: editCatLabel.trim() ? 1 : 0.4 }}
                             >
-                              Enregistrer
+                              {t('settings.profile.save')}
                             </button>
                           </div>
                         </div>
@@ -425,7 +444,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
           </div>
 
           <div className="grid grid-cols-2 gap-3.5">
-            <Field label="Montant (DZD)" error={errors.amount}>
+            <Field label={t('modal.sub.amount')} error={errors.amount}>
               <FormInput
                 type="number"
                 min="0"
@@ -435,7 +454,16 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                 error={errors.amount}
               />
             </Field>
-            <Field label="Jour de renouvellement" error={errors.renewalDay}>
+            <Field label="Billing Cycle">
+              <FormSelect value={form.billingCycle} onChange={(e) => setField("billingCycle", e.target.value)}>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </FormSelect>
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3.5">
+            <Field label={form.billingCycle === "yearly" ? "Renewal Day" : t('modal.sub.renewal')} error={errors.renewalDay}>
               <FormInput
                 type="number"
                 min="1"
@@ -446,9 +474,28 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
                 error={errors.renewalDay}
               />
             </Field>
+            {form.billingCycle === "yearly" && (
+              <Field label="Renewal Month" error={errors.renewalMonth}>
+                <FormSelect value={form.renewalMonth} onChange={(e) => setField("renewalMonth", e.target.value)}>
+                  <option value="" disabled>Select Month</option>
+                  <option value="1">Jan</option>
+                  <option value="2">Feb</option>
+                  <option value="3">Mar</option>
+                  <option value="4">Apr</option>
+                  <option value="5">May</option>
+                  <option value="6">Jun</option>
+                  <option value="7">Jul</option>
+                  <option value="8">Aug</option>
+                  <option value="9">Sep</option>
+                  <option value="10">Oct</option>
+                  <option value="11">Nov</option>
+                  <option value="12">Dec</option>
+                </FormSelect>
+              </Field>
+            )}
           </div>
 
-          <Field label="Date de début">
+          <Field label={t('modal.sub.start')}>
             <FormInput
               type="date"
               value={form.startDate}
@@ -464,7 +511,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
               onClick={() => setConfirmDelete(true)}
               className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-[rgba(248,113,113,0.3)] text-red"
             >
-              Supprimer
+              {t('settings.cat.delete')}
             </button>
           )}
           {isEdit && confirmDelete && (
@@ -472,7 +519,7 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
               onClick={handleDelete}
               className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-[rgba(248,113,113,0.15)] border border-red text-red"
             >
-              Confirmer →
+              {t('modal.sub.del_confirm')}
             </button>
           )}
 
@@ -482,14 +529,14 @@ export function SubscriptionModal({ isOpen, sub, onClose }) {
             onClick={onClose}
             className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-2 rounded-lg cursor-pointer bg-transparent border border-border-2 text-text-faint"
           >
-            Annuler
+            {t('settings.cat.cancel')}
           </button>
           <button
             onClick={handleSave}
             className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg cursor-pointer bg-gold border border-gold font-semibold"
             style={{ color: "#020d0d" }}
           >
-            {isEdit ? "Enregistrer" : "Ajouter"}
+            {isEdit ? t('settings.profile.save') : t('settings.cat.add')}
           </button>
         </div>
       </div>
