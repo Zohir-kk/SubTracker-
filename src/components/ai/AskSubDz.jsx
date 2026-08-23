@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSubDzChat } from '@/hooks/useSubDzChat';
 import { ChatPanel } from './ChatPanel';
+import { useLanguage } from '../../providers/LanguageProvider.jsx';
 
 export function AskSubDz() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const chat = useSubDzChat();
+
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener('open-ask-ai', handleOpen);
+    return () => window.removeEventListener('open-ask-ai', handleOpen);
+  }, []);
 
   return (
     <>
@@ -24,7 +32,7 @@ export function AskSubDz() {
       {/* Floating trigger button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? 'Fermer le chat AI' : 'Ouvrir le chat SubDz AI'}
+        aria-label={open ? t('ai.chat.close') : t('ai.chat.open')}
         className="fixed bottom-5 end-5 w-14 h-14 rounded-full border-none bg-gold text-[#020d0d] cursor-pointer shadow-[0_4px_20px_rgba(45,212,191,0.45)] hover:shadow-[0_6px_28px_rgba(45,212,191,0.6)] hover:scale-105 flex items-center justify-center z-[250] transition-all duration-200"
       >
         {open ? (

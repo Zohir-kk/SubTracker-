@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { MessageBubble } from './MessageBubble';
+import { useLanguage } from '../../providers/LanguageProvider.jsx';
 
 export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, stop, onClose }) {
+  const { t } = useLanguage();
   const bottomRef = useRef(null);
 
   // Auto-scroll to the latest message on every update
@@ -22,7 +24,7 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
         <button
           onClick={onClose}
           className="bg-transparent border-none text-text-faint cursor-pointer text-xl leading-none px-1.5 py-0.5 rounded hover:text-text"
-          aria-label="Fermer le chat"
+          aria-label={t('ai.chat.close')}
         >
           ×
         </button>
@@ -34,7 +36,7 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
           <div className="flex-1 flex flex-col items-center justify-center text-text-muted text-center gap-2.5">
             <div className="text-3xl text-gold">✦</div>
             <p className="text-xs leading-relaxed max-w-[240px] font-plex">
-              Posez une question sur vos abonnements, votre budget, ou les forfaits télécom en Algérie.
+              {t('ai.chat.welcome')}
             </p>
           </div>
         )}
@@ -54,7 +56,7 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Poser une question…"
+          placeholder={t('ai.chat.placeholder')}
           disabled={isLoading}
           className="flex-1 bg-bg border border-border rounded-xl px-3.5 py-2 text-text font-plex text-xs outline-none focus:border-gold placeholder:text-text-faint"
         />
@@ -63,7 +65,7 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
             type="button"
             onClick={stop}
             className="w-9 h-9 rounded-xl border border-border bg-bg-4 text-red cursor-pointer text-sm flex items-center justify-center shrink-0"
-            aria-label="Arrêter la réponse"
+            aria-label={t('ai.chat.stop')}
           >
             ■
           </button>
@@ -76,7 +78,7 @@ export function ChatPanel({ messages, input, setInput, isLoading, handleSubmit, 
                 ? "bg-gold text-[#020d0d] cursor-pointer"
                 : "bg-bg-4 text-text-faint cursor-default"
             }`}
-            aria-label="Envoyer"
+            aria-label={t('ai.chat.send')}
           >
             ↑
           </button>
