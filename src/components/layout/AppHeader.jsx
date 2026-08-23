@@ -265,7 +265,7 @@ export function AppHeader({ onMenuClick }) {
           <LanguageSwitcher />
           <NotificationBell />
           <ThemeToggle />
-          <UserAvatar initials={profile.initials} onClick={() => setProfileOpen(true)} />
+          <UserAvatar profile={profile} onClick={() => setProfileOpen(true)} />
         </div>
       </header>
 

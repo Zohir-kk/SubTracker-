@@ -153,6 +153,12 @@ export function SubscriptionPanel() {
   function openAdd() { setModalSub(null); setModalOpen(true); }
   function openEdit(sub) { setModalSub(sub); setModalOpen(true); }
 
+  useEffect(() => {
+    const handleOpenAdd = () => openAdd();
+    window.addEventListener('open-add-subscription', handleOpenAdd);
+    return () => window.removeEventListener('open-add-subscription', handleOpenAdd);
+  }, []);
+
   const filtered =
     activeTab === "all"
       ? subscriptions

@@ -9,17 +9,25 @@ const StoreContext = createContext(null);
 
 const DEFAULT_PROFILE = { name: "User", initials: "U", currency: "DZD", avatarUrl: "", language: "" };
 
+/**
+ * StoreProvider acts as the single source of truth for the application state.
+ * It strictly syncs data with Firebase Firestore and manages the authentication state.
+ */
 export function StoreProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // State slices mapped directly from Firestore
   const [subscriptions, setSubscriptions] = useState([]);
   const [budgetLimits, setBudgetLimitsState] = useState({});
   const [categories, setCategoriesState] = useState(defaultCategories);
   const [profile, setProfileState] = useState(DEFAULT_PROFILE);
   const [monthlyBudget, setMonthlyBudgetState] = useState(0);
 
-  // 1. Listen for Auth State
+  /**
+   * 1. Listen for Auth State
+   * Determines if a user is logged in. If logged out, clears all local state to prevent data leaks.
+   */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -36,7 +44,10 @@ export function StoreProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // 2. Fetch/Listen to Firestore Data when User is logged in
+  /**
+   * 2. Fetch/Listen to Firestore Data when User is logged in
+   * Sets up real-time listeners for the user's root document (profile, budget, categories).
+   */
   useEffect(() => {
     if (!user) return;
 
@@ -50,7 +61,7 @@ export function StoreProvider({ children }) {
         setCategoriesState(data.categories || defaultCategories);
         setMonthlyBudgetState(data.monthlyBudget || 0);
       } else {
-        // Initialize new user document
+        // Initialize new user document for first-time login
         setDoc(userDocRef, {
           profile: { 
             name: user.displayName || "User", 
