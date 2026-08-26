@@ -1,6 +1,11 @@
 /**
  * Formats the user's subscription data into a plain-text block
  * that gets injected into the AI system prompt on every request.
+ * 
+ * @param {Array<Object>} subscriptions - The list of all subscriptions.
+ * @param {Object.<string, number>} budgetLimits - A dictionary mapping category keys to their budget limits.
+ * @param {Array<Object>} categories - The list of known category objects.
+ * @returns {string} The formatted multi-line context string.
  */
 export function buildContext(subscriptions, budgetLimits, categories) {
   const active = subscriptions.filter((s) => s.status !== 'paused');

@@ -160,5 +160,8 @@ export default {
   "ai.chat.welcome": "Ask a question about your subscriptions, budget, or telecom plans in Algeria.",
   "ai.chat.placeholder": "Ask a question…",
   "ai.chat.stop": "Stop generating",
-  "ai.chat.send": "Send"
+  "ai.chat.send": "Send",
+  "modal.sub.cycle_monthly": "Monthly",
+  "modal.sub.cycle_yearly": "Yearly",
+  "modal.sub.add": "Add Subscription"
 };

@@ -3,6 +3,7 @@ import { useTheme } from "next-themes";
 import { useStore } from "../../store/useStore.jsx";
 import { useWideLayout, useKPI, formatCurrency } from "../../hooks/useSubscriptions.js";
 import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { useExchangeRates } from "../../hooks/useExchangeRates.js";
 import { cn } from "../../lib/utils.js";
 import {
   ChevronLeft,
@@ -30,6 +31,10 @@ export function AppSidebar({ isOpen, onClose, currentPage, onNavigate }) {
   const { theme, setTheme } = useTheme();
   const { profile, monthlyBudget } = useStore();
   const { t, language } = useLanguage();
+  const { convertToBase } = useExchangeRates();
+  
+  const convertedMonthlyBudget = monthlyBudget > 0 ? convertToBase(monthlyBudget, profile.budgetCurrency || 'dzd') : 0;
+  
   const { total, activeCount, next } = useKPI();
   
   const isDesktop = useWideLayout(768);
@@ -160,14 +165,14 @@ export function AppSidebar({ isOpen, onClose, currentPage, onNavigate }) {
                 {t('sidebar.budget.title')}
               </div>
               
-              {monthlyBudget > 0 ? (
+              {convertedMonthlyBudget > 0 ? (
                 <div>
                   <div className="flex justify-between items-end mb-2">
                     <div className="font-sans text-xl leading-none font-bold text-text">
-                      {Math.round((total / monthlyBudget) * 100)}%
+                      {Math.round((total / convertedMonthlyBudget) * 100)}%
                     </div>
                     <div className="font-plex text-[10px] text-text-muted mb-0.5">
-                      / {formatCurrency(monthlyBudget, profile.currency)}
+                      / {formatCurrency(convertedMonthlyBudget, profile.currency)}
                     </div>
                   </div>
                   
@@ -176,16 +181,16 @@ export function AppSidebar({ isOpen, onClose, currentPage, onNavigate }) {
                     <div 
                       className={cn(
                         "h-full rounded-full transition-all duration-500",
-                        total > monthlyBudget ? "bg-red" : total > monthlyBudget * 0.8 ? "bg-gold" : "bg-teal"
+                        total > convertedMonthlyBudget ? "bg-red" : total > convertedMonthlyBudget * 0.8 ? "bg-gold" : "bg-teal"
                       )}
-                      style={{ width: `${Math.min(100, (total / monthlyBudget) * 100)}%` }}
+                      style={{ width: `${Math.min(100, (total / convertedMonthlyBudget) * 100)}%` }}
                     />
                   </div>
                   
                   <div className="font-plex text-[9px] text-text-faint">
-                    {total > monthlyBudget 
-                      ? `${t('sidebar.budget.over')} ${formatCurrency(total - monthlyBudget, profile.currency)}` 
-                      : `${t('sidebar.budget.remaining')} ${formatCurrency(monthlyBudget - total, profile.currency)}`}
+                    {total > convertedMonthlyBudget 
+                      ? `${t('sidebar.budget.over')} ${formatCurrency(total - convertedMonthlyBudget, profile.currency)}` 
+                      : `${t('sidebar.budget.remaining')} ${formatCurrency(convertedMonthlyBudget - total, profile.currency)}`}
                   </div>
                 </div>
               ) : (

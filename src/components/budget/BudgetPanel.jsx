@@ -3,12 +3,21 @@ import { formatCurrency, useWideLayout, computeSpendPerCategory } from "../../ho
 import { useStore } from "../../store/useStore.jsx";
 import { useLanguage } from "../../providers/LanguageProvider.jsx";
 import { Icon } from "../ui/Icon.jsx";
+import { useExchangeRates } from "../../hooks/useExchangeRates.js";
 
 function BudgetBar({ category, used, limit, animate, onEditLimit, currency }) {
   const { t } = useLanguage();
+  
+  // Cap the progress bar at 100% visually, even if the user overspends,
+  // to prevent the bar from breaking out of its container layout.
   const percent = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
+  
   const isOverspend = limit > 0 && used > limit;
+  // Provide an early warning visual cue when reaching 90% of the budget.
   const isNearLimit = limit > 0 && !isOverspend && percent >= 90;
+  
+  // Use semantic colors (red for danger, orange for warning) to instantly 
+  // alert the user to their spending health, overriding the category color.
   const barColor = isOverspend ? "var(--red)" : isNearLimit ? "var(--orange)" : category.color;
 
   return (
@@ -75,14 +84,24 @@ function StatCard({ label, value, sub, color }) {
 
 export function BudgetPanel() {
   const { t } = useLanguage();
-  const { subscriptions, budgetLimits, categories: CATEGORIES, profile, monthlyBudget, setBudget, setMonthlyBudget } = useStore();
-  const spent = computeSpendPerCategory(subscriptions);
+  const { subscriptions, budgetLimits, categories: CATEGORIES, profile, monthlyBudget, setBudget, setMonthlyBudget, setProfile } = useStore();
+  const { convertToBase } = useExchangeRates();
+  
+  // The monthly budget limit might have been entered when the user had a different 
+  // global currency selected. We convert it from its original currency into the 
+  // currently active global currency so the dashboard math stays proportional.
+  const convertedMonthlyBudget = monthlyBudget > 0 ? convertToBase(monthlyBudget, profile.budgetCurrency || 'dzd') : 0;
+  
+  // Compute how much is spent per category. We pass the convertToBase function 
+  // so that subscriptions in foreign currencies (e.g. Netflix in USD) are 
+  // accurately reflected in the budget limits.
+  const spent = computeSpendPerCategory(subscriptions, convertToBase);
   const totalSpent = Object.values(spent).reduce((a, b) => a + b, 0);
   const totalBudget = Object.values(budgetLimits).reduce((a, b) => a + b, 0);
-  const effectiveBudget = monthlyBudget > 0 ? monthlyBudget : totalBudget;
+  const effectiveBudget = convertedMonthlyBudget > 0 ? convertedMonthlyBudget : totalBudget;
   const savedAmount = subscriptions
     .filter((s) => s.status === "paused")
-    .reduce((sum, s) => sum + s.amount, 0);
+    .reduce((sum, s) => sum + convertToBase(s.amount, s.currency), 0);
   const usageRate = effectiveBudget > 0 ? Math.round((totalSpent / effectiveBudget) * 100) : 0;
 
   // ── Global monthly budget editing ─────────────────────────────
@@ -91,14 +110,24 @@ export function BudgetPanel() {
   const monthlyInputRef = useRef(null);
 
   function startEditMonthly() {
-    setMonthlyValue(monthlyBudget > 0 ? String(monthlyBudget) : "");
+    setMonthlyValue(convertedMonthlyBudget > 0 ? String(Number(convertedMonthlyBudget.toFixed(2))) : "");
     setEditingMonthly(true);
     setTimeout(() => monthlyInputRef.current?.focus(), 0);
   }
 
   function commitMonthly() {
     const val = Number(monthlyValue);
-    setMonthlyBudget(isNaN(val) || val < 0 ? 0 : val);
+    if (!isNaN(val) && val >= 0) {
+      setMonthlyBudget(val);
+      if (val > 0) {
+        // We MUST save the active profile currency alongside the budget limit.
+        // This acts as an anchor. If the user later switches their global currency, 
+        // we use this anchor to accurately convert their budget to the new view.
+        setProfile({ budgetCurrency: profile.currency || 'dzd' });
+      }
+    } else {
+      setMonthlyBudget(0);
+    }
     setEditingMonthly(false);
   }
 
@@ -179,8 +208,8 @@ export function BudgetPanel() {
             </div>
           ) : (
             <div className="font-sans text-lg font-bold text-text leading-none">
-              {monthlyBudget > 0 ? (
-                <>{formatCurrency(monthlyBudget, profile.currency)}</>
+              {convertedMonthlyBudget > 0 ? (
+                <>{formatCurrency(convertedMonthlyBudget, profile.currency)}</>
               ) : (
                 <span className="font-plex text-[10px] text-text-faint">{t('budget.empty')}</span>
               )}
@@ -230,7 +259,7 @@ export function BudgetPanel() {
                     placeholder="0"
                     className="flex-1 bg-bg border border-gold rounded-md px-2 py-[5px] font-plex text-[11px] text-text outline-none"
                   />
-                  <span className="font-plex text-[9px] text-text-faint">DZD</span>
+                  <span className="font-plex text-[9px] text-text-faint">{profile.currency}</span>
                   <button
                     onClick={commitEdit}
                     className="bg-gold border-none rounded-[5px] px-2.5 py-1 font-plex text-[9px] font-semibold cursor-pointer"
@@ -242,6 +271,24 @@ export function BudgetPanel() {
               )}
             </div>
           ))}
+          {(() => {
+            const knownKeys = CATEGORIES.map((c) => c.key);
+            const otherAmount = Object.entries(spent).reduce((sum, [key, amt]) => knownKeys.includes(key) ? sum : sum + amt, 0);
+            if (otherAmount > 0) {
+              return (
+                <BudgetBar
+                  key="other"
+                  category={{ key: "other", label: "Other", color: "var(--text-faint)" }}
+                  used={otherAmount}
+                  limit={0}
+                  animate={animate}
+                  currency={profile.currency}
+                  onEditLimit={() => {}}
+                />
+              );
+            }
+            return null;
+          })()}
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 content-start">

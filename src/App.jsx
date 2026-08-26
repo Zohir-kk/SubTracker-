@@ -80,7 +80,7 @@ function AppContent() {
         />
         <div className="flex flex-col flex-1 min-w-0">
           <AppHeader onMenuClick={() => setSidebarOpen((v) => !v)} />
-          {currentPage === "settings" ? <Parametres /> : <Dashboard />}
+          {currentPage === "settings" ? <Parametres onNavigate={setCurrentPage} /> : <Dashboard />}
         </div>
       </div>
       <AskSubDz />
