@@ -7,9 +7,10 @@
 // Everything else goes in lib/utils.js
 // ─────────────────────────────────────────────────────────────
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStore } from "../store/useStore.jsx";
 import { daysUntil } from "../lib/utils.js";
+import { useExchangeRates } from "./useExchangeRates.js";
 
 // Re-export utilities from lib/utils.js so components that
 // currently import from hooks don't need to change their imports
@@ -22,9 +23,13 @@ export {
 } from "../lib/utils.js";
 
 // ── USE MEDIA GRID ────────────────────────────────────────────
-// Returns a responsive column count that updates on window resize.
-// Usage: const cols = useMediaGrid(4)
-// Breakpoints: <480px=1col, <1024px=2cols, else=defaultCols
+/**
+ * Returns a responsive column count that updates on window resize.
+ * Breakpoints: <480px = 1 col, <1024px = 2 cols, else = defaultCols.
+ * 
+ * @param {number} defaultCols - The default number of columns for large screens.
+ * @returns {number} The current number of columns based on window width.
+ */
 export function useMediaGrid(defaultCols = 3) {
   const [cols, setCols] = useState(defaultCols);
 
@@ -44,8 +49,12 @@ export function useMediaGrid(defaultCols = 3) {
 }
 
 // ── USE WIDE LAYOUT ───────────────────────────────────────────
-// Returns true if screen is wider than the given breakpoint.
-// Usage: const isWide = useWideLayout(768)
+/**
+ * Detects if the current viewport width is greater than or equal to a given breakpoint.
+ * 
+ * @param {number} breakpoint - The width in pixels to check against (default: 768).
+ * @returns {boolean} True if the window is wider than the breakpoint.
+ */
 export function useWideLayout(breakpoint = 768) {
   const [isWide, setIsWide] = useState(
     typeof window !== "undefined" ? window.innerWidth >= breakpoint : true,
@@ -64,26 +73,43 @@ export function useWideLayout(breakpoint = 768) {
 }
 
 // ── USE KPI ───────────────────────────────────────────────────
-// Computes all 4 dashboard KPI values from subscriptions data.
-// Usage: const { total, activeCount, savings, next } = useKPI()
+/**
+ * Computes all 4 dashboard KPI values from the user's subscriptions data.
+ * Values are memoized to prevent expensive array reductions on every render.
+ * 
+ * @returns {{ total: number, activeCount: number, savings: number, next: Object|undefined }}
+ */
 export function useKPI() {
   const { subscriptions } = useStore();
+  const { convertToBase } = useExchangeRates();
 
-  const active = subscriptions.filter((s) => s.status === "active");
-  const paused = subscriptions.filter((s) => s.status === "paused");
-  const billable = subscriptions.filter(
-    (s) => s.status === "active" || s.status === "trial",
-  );
+  return useMemo(() => {
+    const active = subscriptions.filter((s) => s.status === "active");
+    const paused = subscriptions.filter((s) => s.status === "paused");
+    const billable = subscriptions.filter(
+      (s) => s.status === "active" || s.status === "trial"
+    );
 
-  const total = billable.reduce((sum, s) => sum + s.amount, 0);
-  const activeCount = active.length;
-  const savings = paused.reduce((sum, s) => sum + s.amount, 0);
+    const total = billable.reduce((sum, s) => {
+      let amt = convertToBase(s.amount, s.currency);
+      if (s.billingCycle === "yearly") amt = amt / 12;
+      return sum + amt;
+    }, 0);
+    
+    const activeCount = active.length;
+    
+    const savings = paused.reduce((sum, s) => {
+      let amt = convertToBase(s.amount, s.currency);
+      if (s.billingCycle === "yearly") amt = amt / 12;
+      return sum + amt;
+    }, 0);
 
-  const withDays = active
-    .map((s) => ({ ...s, days: daysUntil(s) }))
-    .sort((a, b) => a.days - b.days);
-  const next = withDays[0];
+    const withDays = active
+      .map((s) => ({ ...s, days: daysUntil(s) }))
+      .sort((a, b) => a.days - b.days);
+    const next = withDays[0];
 
-  return { total, activeCount, savings, next };
+    return { total, activeCount, savings, next };
+  }, [subscriptions, convertToBase]);
 }
 

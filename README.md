@@ -18,7 +18,7 @@ A personal subscription management dashboard built for Algerian users. Track mon
 | UI primitives | Radix UI (avatar, dialog, dropdown, select, switch, tabs, tooltip) |
 | State | React Context via `useStore` linked to Firestore |
 | Internationalization | Custom `LanguageProvider` (en, fr, ar) |
-| Currency | DZD (Algerian Dinar) |
+| Currency | DZD as base, with global multi-currency conversion via `fawazahmed0/currency-api` |
 | AI | Vercel AI SDK + Claude (Anthropic) via serverless API route |
 | Rate limiting | Upstash Redis (`@upstash/ratelimit`) |
 
@@ -107,6 +107,8 @@ All data is securely synced to Firebase via `useStore.jsx`. The app requires use
 | `users/{uid}/budgetLimits` | Map of `{ [categoryKey]: limitDZD }` |
 | `users/{uid}/categories` | Array of category objects `{ key, label, icon, color }` |
 | `users/{uid}/monthlyBudget` | Total monthly budget threshold |
+| `users/{uid}/profile.budgetCurrency` | Internal anchor indicating the currency the budget was set in |
+| `users/{uid}/profile.customRates` | Custom user-defined exchange rates |
 | `users/{uid}/subscriptions` | (Collection) Individual subscription documents |
 
 On first login, new users are seeded with standard categories and a welcome profile.
@@ -118,7 +120,8 @@ On first login, new users are seeded with standard categories and a welcome prof
 - **Internationalization (i18n)** — All user-facing text must be wrapped in `t('key')` from `useLanguage()`.
 - **RTL Support** — Layouts automatically switch direction based on the selected language using Tailwind's `rtl:` modifiers (e.g., `rtl:translate-x-full`, `rtl:rotate-180`).
 - **Tailwind Styling** — Components heavily rely on Tailwind utility classes with CSS variables mapping to the design system (`bg-bg`, `text-gold`, `border-border-2`).
-- **All amounts in DZD** — formatted via `formatCurrency()` from `lib/utils.js`.
+- **Multi-Currency & API** — DZD is the internal base currency. `formatCurrency()` handles localized formatting. `useExchangeRates()` dynamically converts amounts using live rates fetched daily from the `fawazahmed0/currency-api` CDN (with local custom rate overrides).
+- **JSDoc Documentation** — Core hooks (`useStore`, `useSubscriptions`, `useExchangeRates`) and utilities (`utils.js`) are thoroughly documented using JSDoc for rich editor hover tooltips.
 - **Modals use `createPortal`** — rendered at `document.body` to avoid clipping issues.
 - **Responsive breakpoints**: 480px (1 col), 768px (2 col / mobile sidebar overlay), 1024px (full desktop).
 

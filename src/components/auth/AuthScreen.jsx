@@ -28,6 +28,14 @@ export function AuthScreen() {
     setLoading(true);
 
     try {
+      if (!isLogin && !isResetting) {
+        if (password.length < 8) {
+           setError(t('auth.error.password_length') || "Password must be at least 8 characters.");
+           setLoading(false);
+           return;
+        }
+      }
+
       if (isResetting) {
         await sendPasswordResetEmail(auth, email);
         setMessage(t('auth.reset_sent'));

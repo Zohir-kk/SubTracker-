@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../../store/useStore.jsx";
 import { formatCurrency, daysUntil } from "../../hooks/useSubscriptions.js";
-import { SubscriptionModal } from "../subscription/SubscriptionModal.jsx";
+import { SubscriptionOverlay } from "../subscription/SubscriptionOverlay.jsx";
 import { cn } from "../../lib/utils.js";
 import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { useExchangeRates } from "../../hooks/useExchangeRates.js";
 import { Icon } from "../ui/Icon.jsx";
 
 function getCatInfo(categories, key) {
@@ -50,11 +51,15 @@ function RenewalBar({ renewalDay, color }) {
   );
 }
 
-function SubscriptionCard({ sub, onClick, categories, currency }) {
+function SubscriptionCard({ sub, onClick, categories, baseCurrency }) {
   const { t } = useLanguage();
+  const { convertToBase } = useExchangeRates();
   const { color, label: catLabel } = getCatInfo(categories, sub.category);
   const days = daysUntil(sub);
   const isSoon = days <= 7;
+  
+  const originalCurrency = sub.currency || baseCurrency;
+  const convertedAmount = convertToBase(sub.amount, originalCurrency);
 
   const renewalText =
     days === 0
@@ -96,7 +101,7 @@ function SubscriptionCard({ sub, onClick, categories, currency }) {
       {/* Amount */}
       <div className="flex items-baseline gap-[5px]">
         <span className="font-sans text-[22px] font-bold text-text">
-          {formatCurrency(sub.amount, currency)}
+          {formatCurrency(convertedAmount, baseCurrency)}
         </span>
       </div>
 
@@ -193,7 +198,7 @@ export function SubscriptionPanel() {
             sub={sub}
             onClick={() => openEdit(sub)}
             categories={categories}
-            currency={profile.currency}
+            baseCurrency={profile.currency || "DZD"}
           />
         ))}
       </div>
@@ -218,9 +223,10 @@ export function SubscriptionPanel() {
         </div>
       )}
 
-      <SubscriptionModal
+      <SubscriptionOverlay
         isOpen={modalOpen}
         sub={modalSub}
+        defaultCategory={activeTab === "all" ? null : activeTab}
         onClose={() => { setModalOpen(false); setModalSub(null); }}
       />
     </div>

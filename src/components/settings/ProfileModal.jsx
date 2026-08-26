@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "../../store/useStore.jsx";
 import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { cn } from "../../lib/utils.js";
 
 /**
  * ProfileModal
@@ -12,40 +13,50 @@ import { useLanguage } from "../../providers/LanguageProvider.jsx";
  */
 export function ProfileModal({ isOpen, onClose }) {
   const { t } = useLanguage();
-  const { profile, setProfile, user, logout } = useStore();
+  const { profile, setProfile, user, logout, subscriptions, update } = useStore();
   
   // Local form state
   const [name, setName] = useState("");
   const [initials, setInitials] = useState("");
   const [currency, setCurrency] = useState("DZD");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Sync local state with the global profile whenever the modal opens or the profile updates remotely
   useEffect(() => {
-    if (!isOpen) return;
-    setName(profile.name || "");
-    setInitials(profile.initials || "");
-    setCurrency(profile.currency || "DZD");
-    setAvatarUrl(profile.avatarUrl || "");
+    if (isOpen) {
+      setMounted(true);
+      setName(profile.name || "");
+      setInitials(profile.initials || "");
+      setCurrency(profile.currency || "DZD");
+      setAvatarUrl(profile.avatarUrl || "");
+    } else {
+      setTimeout(() => setMounted(false), 300);
+    }
   }, [isOpen, profile]);
 
-  if (!isOpen) return null;
+  if (!isOpen && !mounted) return null;
 
   /**
    * handleSave
    * Validates inputs, generates auto-initials if empty, and dispatches to Firebase via setProfile.
    */
-  function handleSave() {
+  async function handleSave() {
     const trimmedName = name.trim();
     const trimmedInitials = initials.trim().toUpperCase().slice(0, 3);
     if (!trimmedName) return; // Prevent saving an empty name
     
-    setProfile({ 
+    setSaving(true);
+    
+    await setProfile({ 
       name: trimmedName, 
       initials: trimmedInitials || trimmedName.slice(0, 2).toUpperCase(), // Fallback to first 2 letters
       currency,
       avatarUrl
     });
+    
+    setSaving(false);
     onClose();
   }
 
@@ -84,12 +95,25 @@ export function ProfileModal({ isOpen, onClose }) {
   }
 
   return createPortal(
-    <div
-      className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 overflow-y-auto"
-    >
-      <div className="bg-bg-2 border border-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-card animate-fade-up my-auto">
+    <div className="fixed inset-0 z-[1000] overflow-hidden pointer-events-none">
+      {/* Backdrop */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 pointer-events-auto",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={onClose}
+      />
+
+      {/* Sliding Overlay */}
+      <div 
+        className={cn(
+          "absolute top-0 bottom-0 right-0 w-full md:w-[600px] bg-bg-2 border-l border-border shadow-2xl flex flex-col pointer-events-auto transition-transform duration-300 ease-out overflow-y-auto",
+          isOpen ? "translate-x-0" : "translate-x-full rtl:-translate-x-full"
+        )}
+      >
         {/* Banner Header */}
-        <div className="relative h-28 bg-bg-3 w-full">
+        <div className="relative h-32 bg-bg-3 w-full shrink-0">
           <button
             onClick={onClose}
             className="absolute top-4 end-4 bg-bg/50 hover:bg-bg border border-border-2 rounded-full cursor-pointer text-text-faint text-xl leading-none w-8 h-8 flex items-center justify-center backdrop-blur-md transition-colors"
@@ -99,7 +123,7 @@ export function ProfileModal({ isOpen, onClose }) {
         </div>
 
         {/* Content Area */}
-        <div className="px-6 sm:px-8 pb-8 pt-0 relative">
+        <div className="px-6 sm:px-8 pb-8 pt-0 relative flex-1">
           {/* Avatar & Title Overlapping Banner */}
           <div className="flex flex-col mb-8">
             <div className="relative group w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-bg-2 overflow-hidden bg-bg shrink-0 -mt-14 sm:-mt-16 mb-3">
@@ -252,13 +276,14 @@ export function ProfileModal({ isOpen, onClose }) {
               </button>
               <button
                 onClick={handleSave}
+                disabled={saving}
                 className="flex-1 sm:flex-none font-plex text-[10px] tracking-[1.5px] uppercase px-6 py-2.5 rounded-lg cursor-pointer border-none font-semibold transition-colors"
                 style={{
-                  background: name.trim() ? "var(--gold)" : "var(--border-2)",
+                  background: name.trim() && !saving ? "var(--gold)" : "var(--border-2)",
                   color: "#020d0d",
                 }}
               >
-                {t('settings.profile.save')}
+                {saving ? "..." : t('settings.profile.save')}
               </button>
             </div>
           </div>

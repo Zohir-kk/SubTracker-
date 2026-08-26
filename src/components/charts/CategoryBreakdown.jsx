@@ -3,6 +3,7 @@ import { useStore } from "../../store/useStore.jsx";
 import { formatCurrency, computeBreakdown } from "../../hooks/useSubscriptions.js";
 import { Icon } from "../ui/Icon.jsx";
 import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { useExchangeRates } from "../../hooks/useExchangeRates.js";
 
 function BreakdownRow({ item, animate, currency }) {
   return (
@@ -43,7 +44,8 @@ function BreakdownRow({ item, animate, currency }) {
 export function CategoryBreakdown() {
   const { t } = useLanguage();
   const { subscriptions, categories: CATEGORIES, profile } = useStore();
-  const breakdown = computeBreakdown(subscriptions, CATEGORIES);
+  const { convertToBase } = useExchangeRates();
+  const breakdown = computeBreakdown(subscriptions, CATEGORIES, convertToBase);
   const [animate, setAnimate] = useState(false);
 
   useEffect(() => {

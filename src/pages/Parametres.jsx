@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { useStore } from "../store/useStore.jsx";
 import { cn } from "../lib/utils.js";
 import { useLanguage } from "../providers/LanguageProvider.jsx";
+import { useExchangeRates } from "../hooks/useExchangeRates.js";
 
 import { Icon } from "../components/ui/Icon.jsx";
 import { IconPicker } from "../components/ui/IconPicker.jsx";
+import { ChevronLeft, Trash2 } from "lucide-react";
 
 const COLOR_PALETTE = [
   "var(--teal)",
@@ -60,156 +62,7 @@ function ColorPicker({ selected, onSelect }) {
   );
 }
 
-function ProfileSection() {
-  const { profile, setProfile } = useStore();
-  const { t } = useLanguage();
-  const [name, setName] = useState(profile.name || "");
-  const [initials, setInitials] = useState(profile.initials || "");
-  const [currency, setCurrency] = useState(profile.currency || "DZD");
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || "");
-  const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    setName(profile.name || "");
-    setInitials(profile.initials || "");
-    setCurrency(profile.currency || "DZD");
-    setAvatarUrl(profile.avatarUrl || "");
-  }, [profile]);
-
-  const previewInitials =
-    initials.trim().toUpperCase().slice(0, 3) ||
-    name.trim().slice(0, 2).toUpperCase() ||
-    "?";
-
-  const isDirty =
-    name.trim() !== profile.name ||
-    initials.trim().toUpperCase().slice(0, 3) !== profile.initials ||
-    currency !== (profile.currency || "DZD") ||
-    avatarUrl !== (profile.avatarUrl || "");
-
-  function handleSave() {
-    const trimmedName = name.trim();
-    if (!trimmedName) return;
-    const trimmedInitials =
-      initials.trim().toUpperCase().slice(0, 3) ||
-      trimmedName.slice(0, 2).toUpperCase();
-    setProfile({ 
-      name: trimmedName, 
-      initials: trimmedInitials,
-      currency,
-      avatarUrl
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
-
-  function handleAvatarUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const size = 150;
-        canvas.width = size;
-        canvas.height = size;
-        
-        // cover crop
-        const ratio = Math.max(size / img.width, size / img.height);
-        const x = (size - img.width * ratio) / 2;
-        const y = (size - img.height * ratio) / 2;
-        ctx.drawImage(img, 0, 0, img.width, img.height, x, y, img.width * ratio, img.height * ratio);
-        
-        setAvatarUrl(canvas.toDataURL("image/jpeg", 0.8));
-        setSaved(false);
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  const canSave = name.trim() && isDirty;
-
-  return (
-    <Section title={t('settings.profile.title')}>
-      <div className="flex justify-center mb-7 relative group w-max mx-auto">
-        <div
-          className="w-[72px] h-[72px] rounded-full flex items-center justify-center font-plex text-xl font-semibold overflow-hidden border-2 border-gold"
-          style={{ background: "var(--gold)", color: "#020d0d" }}
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            previewInitials
-          )}
-        </div>
-        <label className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-          <span className="text-white text-xs">Edit</span>
-          <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-        </label>
-      </div>
-
-      <div className="flex flex-col gap-4 max-w-[400px]">
-        <Field label={t('settings.profile.name')}>
-          <input
-            value={name}
-            onChange={(e) => { setName(e.target.value); setSaved(false); }}
-            placeholder={t('settings.profile.name_ph')}
-            className={inputCls}
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Field label={t('settings.profile.initials')}>
-            <input
-              value={initials}
-              onChange={(e) => { setInitials(e.target.value.toUpperCase().slice(0, 3)); setSaved(false); }}
-              placeholder={t('settings.profile.initials_ph')}
-              maxLength={3}
-              className={cn(inputCls, "uppercase tracking-[3px]")}
-            />
-          </Field>
-
-          <Field label="Currency">
-            <select
-              value={currency}
-              onChange={(e) => { setCurrency(e.target.value); setSaved(false); }}
-              className={cn(inputCls, "cursor-pointer appearance-none")}
-            >
-              <option value="DZD">DZD - Algerian Dinar</option>
-              <option value="USD">USD - US Dollar</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="GBP">GBP - British Pound</option>
-              <option value="CAD">CAD - Canadian Dollar</option>
-            </select>
-          </Field>
-        </div>
-
-        <div className="flex items-center gap-3 mt-1">
-          <button
-            onClick={handleSave}
-            disabled={!canSave}
-            className="font-plex text-[9px] tracking-[1px] uppercase px-5 py-[9px] rounded-lg font-semibold border-none transition-all duration-200"
-            style={{
-              cursor: canSave ? "pointer" : "not-allowed",
-              background: canSave ? "var(--gold)" : "var(--border-2)",
-              color: canSave ? "#020d0d" : "var(--text-faint)",
-            }}
-          >
-            {t('settings.profile.save')}
-          </button>
-          {saved && (
-            <span className="font-plex text-[9px] tracking-[1px] text-gold uppercase">
-              {t('settings.profile.saved')}
-            </span>
-          )}
-        </div>
-      </div>
-    </Section>
-  );
-}
 
 const EMPTY_NEW = { label: "", icon: "", color: COLOR_PALETTE[0] };
 
@@ -317,7 +170,7 @@ function CategoriesSection() {
                   )}
                   title={isPending ? t('settings.cat.cancel') : t('settings.cat.delete')}
                 >
-                  ×
+                  {isPending ? '×' : <Trash2 size={13} />}
                 </button>
               </div>
 
@@ -445,21 +298,260 @@ function CategoriesSection() {
   );
 }
 
-export function Parametres() {
+const ALL_CURRENCIES = ["dzd", "eur", "usd", "gbp", "cad"];
+
+function PreferencesSection() {
+  const { profile, setProfile } = useStore();
+  const { t } = useLanguage();
+  const [salaryDay, setSalaryDay] = useState(profile.salaryDay || 1);
+  const [multiCurrency, setMultiCurrency] = useState(profile.multiCurrency || false);
+  const { rates: liveRates } = useExchangeRates(multiCurrency);
+  
+  const baseCurr = (profile.currency || 'dzd').toLowerCase();
+  const availableCurrencies = ALL_CURRENCIES.filter(c => c !== baseCurr);
+
+  const [rates, setRates] = useState(() => {
+    const init = {};
+    availableCurrencies.forEach(c => {
+      let val = profile.customRates?.[c];
+      if (val) {
+        if (c === 'dzd') val = (1 / val).toFixed(2);
+        init[c] = val;
+      } else {
+        init[c] = "";
+      }
+    });
+    return init;
+  });
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSalaryDay(profile.salaryDay || 1);
+    setMultiCurrency(profile.multiCurrency || false);
+    
+    const newRates = {};
+    availableCurrencies.forEach(c => {
+      let val = profile.customRates?.[c];
+      if (val) {
+        if (c === 'dzd') val = (1 / val).toFixed(2);
+        newRates[c] = val;
+      } else {
+        newRates[c] = "";
+      }
+    });
+    setRates(newRates);
+  }, [profile]);
+
+  const isDirty = 
+    salaryDay !== (profile.salaryDay || 1) || 
+    multiCurrency !== (profile.multiCurrency || false) ||
+    availableCurrencies.some(c => {
+      let savedVal = profile.customRates?.[c];
+      if (savedVal && c === 'dzd') savedVal = (1 / savedVal).toFixed(2);
+      return (rates[c] || "") !== (savedVal?.toString() || "");
+    });
+
+  function handleSave() {
+    const customRates = { ...profile.customRates };
+    availableCurrencies.forEach(c => {
+      if (rates[c]) {
+        let val = Number(rates[c]);
+        // DZD is our internal base reference for everything in the database. 
+        // If the user inputs a DZD rate relative to their selected base currency, 
+        // we invert it (1/x) so it stores correctly in the database as "Base -> DZD".
+        if (c === 'dzd') val = 1 / val;
+        customRates[c] = val;
+      } else {
+        // Remove empty values to fall back to the live API rate for this currency
+        delete customRates[c];
+      }
+    });
+
+    setProfile({ salaryDay: Number(salaryDay), multiCurrency, customRates });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <Section title={t('settings.prefs.title')}>
+      <div className="flex flex-col gap-4 max-w-[400px]">
+        <Field label={t('settings.prefs.salary_day')}>
+          <input
+            type="number"
+            min="1"
+            max="31"
+            value={salaryDay}
+            onChange={(e) => { setSalaryDay(e.target.value); setSaved(false); }}
+            placeholder={t('settings.prefs.salary_day_ph')}
+            className={inputCls}
+          />
+          <div className="text-[10px] text-text-faint mt-1">{t('settings.prefs.salary_day_desc')}</div>
+        </Field>
+        <div className="flex items-center justify-between border border-border-2 rounded-lg p-3 mt-2">
+          <div>
+            <div className="font-sans text-sm text-text font-medium">{t('settings.prefs.multi_currency')}</div>
+            <div className="text-[10px] text-text-faint">{t('settings.prefs.multi_currency_desc')}</div>
+          </div>
+          <button
+            onClick={() => { setMultiCurrency(!multiCurrency); setSaved(false); }}
+            className={cn("w-10 h-6 rounded-full transition-colors relative", multiCurrency ? "bg-gold" : "bg-bg-3")}
+          >
+            <div className={cn("w-4 h-4 rounded-full bg-bg absolute top-1 transition-transform", multiCurrency ? "translate-x-5 rtl:-translate-x-5" : "translate-x-1 rtl:-translate-x-1")} />
+          </button>
+        </div>
+
+        {multiCurrency && (
+          <div className="grid grid-cols-2 gap-3 p-3 bg-bg-2 border border-border-2 rounded-lg -mt-2">
+            {availableCurrencies.map(curr => {
+              const isDzd = curr === 'dzd';
+              const base = profile.currency || 'DZD';
+              const label = isDzd ? `1 ${base.toUpperCase()} = (DZD)` : `1 ${curr.toUpperCase()} = (${base.toUpperCase()})`;
+              
+              let placeholder = "Live API";
+              if (liveRates && liveRates[curr]) {
+                placeholder = `~ ${isDzd ? liveRates[curr].toFixed(2) : (1 / liveRates[curr]).toFixed(2)}`;
+              }
+              return (
+                <Field key={curr} label={label}>
+                  <input 
+                    type="number" 
+                    value={rates[curr] || ""} 
+                    onChange={(e) => {
+                      setRates(prev => ({...prev, [curr]: e.target.value}));
+                      setSaved(false);
+                    }} 
+                    placeholder={placeholder} 
+                    className={inputCls} 
+                  />
+                </Field>
+              );
+            })}
+          </div>
+        )}
+        <div className="flex items-center gap-3 mt-2">
+          <button
+            onClick={handleSave}
+            disabled={!isDirty}
+            className="font-plex text-[9px] tracking-[1px] uppercase px-5 py-[9px] rounded-lg font-semibold border-none transition-all duration-200"
+            style={{
+              cursor: isDirty ? "pointer" : "not-allowed",
+              background: isDirty ? "var(--gold)" : "var(--border-2)",
+              color: isDirty ? "#020d0d" : "var(--text-faint)",
+            }}
+          >
+            {t('settings.profile.save')}
+          </button>
+          {saved && (
+            <span className="font-plex text-[9px] tracking-[1px] text-gold uppercase">
+              {t('settings.profile.saved')}
+            </span>
+          )}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+function DataSection() {
+  const { exportData, importData, resetAccount } = useStore();
+  const { t } = useLanguage();
+  const [resetWarn, setResetWarn] = useState(false);
+
+  function handleImport(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const confirmed = window.confirm(t('settings.data.import_warning'));
+      if (confirmed) {
+        await importData(event.target.result);
+      }
+      e.target.value = null;
+    };
+    reader.readAsText(file);
+  }
+
+  return (
+    <Section title={t('settings.data.title')}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[600px] mb-6">
+        <div className="border border-border-2 rounded-xl p-4 flex flex-col items-start">
+          <div className="font-sans text-sm text-text font-medium mb-1">{t('settings.data.export')}</div>
+          <div className="text-[10px] text-text-faint mb-4">{t('settings.data.export_desc')}</div>
+          <button
+            onClick={exportData}
+            className="mt-auto font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg bg-bg-3 hover:bg-bg border border-border-2 text-text transition-colors cursor-pointer"
+          >
+            {t('settings.data.export')}
+          </button>
+        </div>
+        <div className="border border-border-2 rounded-xl p-4 flex flex-col items-start relative overflow-hidden group cursor-pointer hover:border-gold transition-colors">
+          <div className="font-sans text-sm text-text font-medium mb-1 group-hover:text-gold transition-colors">{t('settings.data.import')}</div>
+          <div className="text-[10px] text-text-faint mb-4">{t('settings.data.import_desc')}</div>
+          <button className="mt-auto font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg bg-bg-3 border border-border-2 text-text transition-colors group-hover:bg-bg pointer-events-none">
+            {t('settings.data.import_btn')}
+          </button>
+          <input type="file" accept=".json" onChange={handleImport} className="absolute inset-0 opacity-0 cursor-pointer" />
+        </div>
+      </div>
+      
+      <div className="border border-red rounded-xl p-4 max-w-[600px] bg-red/5">
+        <div className="font-sans text-sm text-red font-medium mb-1">{t('settings.data.danger')}</div>
+        <div className="text-[10px] text-text-faint mb-4">{t('settings.data.danger_desc')}</div>
+        
+        {resetWarn ? (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <span className="text-xs text-red font-medium">{t('settings.data.reset_confirm')}</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { resetAccount(); setResetWarn(false); }}
+                className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-[7px] rounded-[7px] cursor-pointer bg-red border-none text-white font-semibold"
+              >
+                {t('settings.data.reset')}
+              </button>
+              <button
+                onClick={() => setResetWarn(false)}
+                className="font-plex text-[9px] tracking-[1px] uppercase px-3.5 py-[7px] rounded-[7px] cursor-pointer bg-bg border border-border-2 text-text-faint"
+              >
+                {t('settings.cat.cancel')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setResetWarn(true)}
+            className="font-plex text-[9px] tracking-[1px] uppercase px-4 py-2 rounded-lg cursor-pointer bg-red border-none text-white font-semibold hover:opacity-90 transition-opacity"
+          >
+            {t('settings.data.reset')}
+          </button>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+export function Parametres({ onNavigate }) {
   const { t } = useLanguage();
   return (
     <div className="p-2.5 md:p-4 overflow-y-auto">
-      <div className="mb-5">
-        <div className="font-sans text-[22px] font-bold text-text mb-1">
-          {t('settings.title')}
-        </div>
-        <div className="font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">
-          {t('settings.subtitle')}
+      <div className="mb-5 flex items-center gap-3">
+        {onNavigate && (
+           <button onClick={() => onNavigate("dashboard")} className="p-2 -ml-2 rounded-full hover:bg-bg-3 text-text-faint transition-colors cursor-pointer flex items-center justify-center">
+             <ChevronLeft size={20} className="rtl:rotate-180" />
+           </button>
+        )}
+        <div>
+          <div className="font-sans text-[22px] font-bold text-text mb-1">
+            {t('settings.title')}
+          </div>
+          <div className="font-plex text-[9px] tracking-[1.5px] uppercase text-text-faint">
+            {t('settings.subtitle')}
+          </div>
         </div>
       </div>
 
-      <ProfileSection />
+      <PreferencesSection />
       <CategoriesSection />
+      <DataSection />
     </div>
   );
 }

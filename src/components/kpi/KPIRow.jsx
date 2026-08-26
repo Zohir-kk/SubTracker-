@@ -78,7 +78,7 @@ export function KPIRow() {
             ? t('time.tomorrow')
             : t('time.inDays', { days: next.days })
         : "—",
-      sub: next ? `${next.name} — ${formatCurrency(next.amount, profile.currency)}` : null,
+      sub: next ? `${next.name} — ${formatCurrency(next.amount, next.currency || profile.currency)}` : null,
       accent: "var(--red)",
       delta: next && next.days <= 3 ? t('kpi.next.delta') : null,
       deltaUp: true,

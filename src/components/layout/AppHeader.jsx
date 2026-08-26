@@ -140,7 +140,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+8px)] end-0 w-[280px] bg-bg-2 border border-border rounded-xl shadow-card z-[500] overflow-hidden">
+        <div className="absolute top-[calc(100%+8px)] right-0 rtl:left-0 rtl:right-auto w-[280px] bg-bg-2 border border-border rounded-xl shadow-card z-[500] overflow-hidden">
           <div className="px-3.5 py-3 border-b border-border-2 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-red shrink-0" />
             <span className="font-sans text-sm font-semibold text-text">
@@ -174,7 +174,7 @@ function NotificationBell() {
                       </div>
                     </div>
                     <div className="font-plex text-[10px] text-red font-semibold shrink-0">
-                      {formatCurrency(s.amount, profile.currency)}
+                      {formatCurrency(s.amount, s.currency || profile.currency)}
                     </div>
                   </div>
                 );
@@ -220,7 +220,7 @@ function LanguageSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+8px)] end-0 w-[140px] bg-bg-2 border border-border rounded-xl shadow-card z-[500] overflow-hidden py-1">
+        <div className="absolute top-[calc(100%+8px)] right-0 rtl:left-0 rtl:right-auto w-[140px] bg-bg-2 border border-border rounded-xl shadow-card z-[500] overflow-hidden py-1">
           {languages.map((lng) => (
             <button
               key={lng.code}
@@ -264,7 +264,9 @@ export function AppHeader({ onMenuClick }) {
           {isDesktop && <MonthBadge />}
           <LanguageSwitcher />
           <NotificationBell />
-          <ThemeToggle />
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
           <UserAvatar profile={profile} onClick={() => setProfileOpen(true)} />
         </div>
       </header>

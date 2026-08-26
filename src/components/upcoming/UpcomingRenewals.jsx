@@ -1,15 +1,20 @@
 import { useStore } from "../../store/useStore.jsx";
 import { formatCurrency, daysUntil, renewalMonth } from "../../hooks/useSubscriptions.js";
 import { useLanguage } from "../../providers/LanguageProvider.jsx";
+import { useExchangeRates } from "../../hooks/useExchangeRates.js";
 import { Icon } from "../ui/Icon.jsx";
 
-function UpcomingItem({ sub, days, categories, currency }) {
+function UpcomingItem({ sub, days, categories, baseCurrency }) {
   const { t } = useLanguage();
+  const { convertToBase } = useExchangeRates();
   const isSoon = days <= 7;
   const cat = categories.find((c) => c.key === sub.category);
   const color = cat?.color ?? "var(--teal)";
   const catLabel = cat?.label ?? sub.category;
   const month = renewalMonth(sub.renewalDay);
+  
+  const originalCurrency = sub.currency || baseCurrency;
+  const convertedAmount = convertToBase(sub.amount, originalCurrency);
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-border-2">
@@ -48,7 +53,7 @@ function UpcomingItem({ sub, days, categories, currency }) {
       {/* Amount */}
       <div className="text-right shrink-0">
         <span className="font-sans text-base font-semibold text-text">
-          {formatCurrency(sub.amount, currency)}
+          {formatCurrency(convertedAmount, baseCurrency)}
         </span>
       </div>
     </div>
@@ -79,7 +84,7 @@ export function UpcomingRenewals() {
       <div>
         {upcoming.map((sub, index) => (
           <div key={sub.id} className={index === upcoming.length - 1 ? "[&>div]:border-b-0" : ""}>
-            <UpcomingItem sub={sub} days={sub.days} categories={categories} currency={profile.currency} />
+            <UpcomingItem sub={sub} days={sub.days} categories={categories} baseCurrency={profile.currency || "DZD"} />
           </div>
         ))}
       </div>
